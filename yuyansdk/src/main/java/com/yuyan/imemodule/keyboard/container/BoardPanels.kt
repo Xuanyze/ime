@@ -122,8 +122,8 @@ class FunctionColumn(context: Context, private val inputView: InputView) : Linea
 }
 
 /** 班牌侧栏按钮：中性圆角、主题配色、明显按压反馈 */
-private fun Context.boardPanelButton(label: String, textSizePx: Int, onClick: () -> Unit): TextView {
-    val view = TextView(this)
+private fun View.boardPanelButton(label: String, textSizePx: Int, onClick: () -> Unit): TextView {
+    val view = TextView(context)
     view.gravity = Gravity.CENTER
     view.text = label
     view.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSizePx.toFloat())
