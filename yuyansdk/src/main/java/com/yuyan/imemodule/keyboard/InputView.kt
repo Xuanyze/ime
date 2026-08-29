@@ -36,6 +36,8 @@ import com.yuyan.imemodule.entity.StringQueue
 import com.yuyan.imemodule.entity.keyboard.SoftKey
 import com.yuyan.imemodule.keyboard.container.CandidatesContainer
 import com.yuyan.imemodule.keyboard.container.ClipBoardContainer
+import com.yuyan.imemodule.keyboard.container.FunctionColumn
+import com.yuyan.imemodule.keyboard.container.SchemeRail
 import com.yuyan.imemodule.keyboard.container.SymbolContainer
 import com.yuyan.imemodule.keyboard.container.T9TextContainer
 import com.yuyan.imemodule.manager.InputModeSwitcher
@@ -60,6 +62,7 @@ import com.yuyan.imemodule.view.widget.LifecycleRelativeLayout
 import com.yuyan.inputmethod.CustomEngine
 import com.yuyan.inputmethod.core.CandidateListItem
 import com.yuyan.inputmethod.core.Kernel
+import splitties.dimensions.dp
 import splitties.views.bottomPadding
 import splitties.views.rightPadding
 import kotlin.math.absoluteValue
@@ -86,6 +89,8 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
     private lateinit var mRightPaddingKey: ManagedPreference.PInt
     private lateinit var mBottomPaddingKey: ManagedPreference.PInt
     private var mFullDisplayKeyboardBar: FullDisplayKeyboardBar? = null
+    private var mSchemeRail: SchemeRail? = null
+    private var mFunctionColumn: FunctionColumn? = null
     var hasSelection = false
     var hasSelectionAll = false
     // 记录删除内容
@@ -191,7 +196,44 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
             mSkbRoot.bottomPadding = mBottomPaddingKey.getValue()
             mSkbRoot.rightPadding = mRightPaddingKey.getValue()
         }
+        updateBoardPanels(context)
         updateTheme()
+    }
+
+    /**
+     * 班牌横屏三栏布局：横屏（非悬浮）时，在键盘两侧的空白边距上挂载
+     * 左侧方案选择栏[SchemeRail]与右侧数字/编辑功能栏[FunctionColumn]。
+     * 竖屏或悬浮模式不挂载，保持原布局。
+     */
+    private fun updateBoardPanels(context: Context) {
+        val env = EnvironmentSingleton.instance
+        val enabled = env.isLandscape && !env.keyboardModeFloat && env.leftMarginWidth >= dp(150)
+        if (enabled) {
+            val rail = SchemeRail(context, this)
+            val column = FunctionColumn(context, this)
+            mSchemeRail?.let { mInputKeyboardContainer.removeView(it) }
+            mFunctionColumn?.let { mInputKeyboardContainer.removeView(it) }
+            mSchemeRail = rail
+            mFunctionColumn = column
+            val keyboardViewId = mSkbRoot.findViewById<View>(R.id.skb_input_keyboard_view).id
+            rail.layoutParams = LayoutParams(env.leftMarginWidth, env.skbHeight).apply {
+                addRule(ALIGN_PARENT_START)
+                addRule(ALIGN_TOP, keyboardViewId)
+                addRule(ALIGN_BOTTOM, keyboardViewId)
+            }
+            column.layoutParams = LayoutParams(env.leftMarginWidth, env.skbHeight).apply {
+                addRule(ALIGN_PARENT_END)
+                addRule(ALIGN_TOP, keyboardViewId)
+                addRule(ALIGN_BOTTOM, keyboardViewId)
+            }
+            mInputKeyboardContainer.addView(rail)
+            mInputKeyboardContainer.addView(column)
+        } else {
+            mSchemeRail?.let { mInputKeyboardContainer.removeView(it) }
+            mFunctionColumn?.let { mInputKeyboardContainer.removeView(it) }
+            mSchemeRail = null
+            mFunctionColumn = null
+        }
     }
 
     private var initialTouchX = 0f
@@ -536,7 +578,10 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
         if (InputModeSwitcher.isEnglish) setComposingText(DecodingInfo.composingStrForCommit)
     }
 
-    fun updateCandidateBar() = mSkbCandidatesBarView.scheduleShowCandidates()
+    fun updateCandidateBar() {
+        mSkbCandidatesBarView.scheduleShowCandidates()
+        mSchemeRail?.runCatching { refresh() }
+    }
 
     private fun resetCandidateWindow() {
         DecodingInfo.reset()
@@ -606,6 +651,29 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
     fun barEscape() = service.barEscape()
 
     fun homeEscape() = service.homeEscape()
+
+    /** 班牌功能栏：提交纯文本（先结束拼音组词，避免数字/符号混入组词串） */
+    fun panelCommitText(text: String) {
+        resetToIdleState()
+        service.commitText(text)
+    }
+
+    /** 班牌功能栏：Backspace，走主键盘 DEL 按键链路（组词中删除拼音，空闲时删除文字） */
+    fun panelBackspace() {
+        processKeyUp(KeyEvent(0, 0, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DEL, 0, 0, 0, 0, KeyEvent.FLAG_SOFT_KEYBOARD))
+    }
+
+    /** 班牌功能栏：方向键 / Forward Delete。组词中先上屏当前候选，与主键盘行为一致 */
+    fun panelSendKeyEvent(keyCode: Int) {
+        if (!DecodingInfo.isCandidatesEmpty && !DecodingInfo.isAssociate) chooseAndUpdate()
+        sendKeyEvent(keyCode)
+        resetToIdleState()
+    }
+
+    /** 班牌功能栏：编辑键用户码（Home/End/全选/复制/剪切/粘贴），复用文本编辑键盘实现 */
+    fun panelUserDefKey(keyCode: Int) {
+        processUserDefKey(keyCode, "")
+    }
 
     private fun sendKeyEvent(keyCode: Int) {
         if (isAddPhrases) {
