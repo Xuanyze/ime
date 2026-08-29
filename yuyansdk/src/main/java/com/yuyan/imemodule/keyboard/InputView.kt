@@ -216,7 +216,6 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
             (skbView.layoutParams as? RelativeLayout.LayoutParams)?.apply {
                 addRule(CENTER_HORIZONTAL, RelativeLayout.TRUE)
             }?.let { skbView.layoutParams = it }
-        if (enabled) {
             val rail = SchemeRail(context, this)
             val column = FunctionColumn(context, this)
             mSchemeRail?.let { mInputKeyboardContainer.removeView(it) }
