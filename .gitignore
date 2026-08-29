@@ -2,7 +2,11 @@
 .gradle/
 local.properties
 .DS_Store
-build/
+# 只忽略真正的 Gradle 构建产物目录；不能裸写 build/，
+# 否则会误伤 assets/rime/build/（Rime 编译方案词库），导致 CI 包缺词库
+/build/
+/app/build/
+/yuyansdk/build/
 captures/
 .externalNativeBuild
 .idea/

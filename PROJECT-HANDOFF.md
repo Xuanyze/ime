@@ -79,7 +79,7 @@
 
 ### 下一步
 
-1. **用户真机验证**：从 GitHub Actions（commit `665edae`，CI 绿）下载 `app-debug-apk` artifact 装机。验证清单：26键/9键/双拼输入与候选词、上屏、删除、空格、Enter；横屏两侧面板布局与美观度；数字键/符号/Ctrl 组合在目标消息 App 里的实际效果；Bar 能否唤回导航栏、HOME 能否回桌面（ROM 相关，需实测）；Android 8 回归。
-2. 按真机反馈微调：面板比例/配色/按键大小；必要时调 EnvironmentSingleton 横屏 0.7 宽度系数给面板让空间。
-3. 备选改进：Ctrl+C/X/V 若目标 App 对 KeyEvent 组合不响应，改走 ClipboardManager 直读直写；Bar 若唤不回导航栏，记录 ROM 限制（规范允许降级）。
+1. **（已修复，待真机复测）"打不出中文"根因**：上游 `.gitignore` 裸写 `build/`，把 `assets/rime/build/`（全部 Rime 编译方案：全拼68MB/9键/笔画/英文/7双拼）排除在 git 外，CI 包只有 19.5MB 且无词库 → 候选恒为空。已收窄 .gitignore 并补提交词库，APK 恢复 60.6MB（commit 3c20b1c）。**教训：对比上游发行版体积是排查手段**。
+2. **布局漂移根因（已修）**：分屏/多窗口下 `displayMetrics` 返回应用窗口宽度 → 键盘尺寸漂移。EnvironmentSingleton 改用物理显示器真实尺寸（maximumWindowMetrics/getRealSize）+ 键盘显式居中 + KeyboardLoaderUtil 尺寸变化自动重建缓存（commit 41e3235）。
+3. **用户真机复测**：装 3c20b1c 之后的包（版本号分钟级 `yyyyMMdd.HHmm-board`）：① 26键全拼输 `nihao`、9键输 `64` 出候选；② 26键不被左栏遮挡、设置菜单不被面板挡；③ Bar/HOME 效果；④ Android 8 回归。若仍无候选，`adb logcat -s BoardPanels` 抓日志。
 4. 应用名/包名仍是语燕默认（com.yuyan.pinyin），待用户确定后修改。
