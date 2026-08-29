@@ -84,3 +84,22 @@
 3. **用户真机复测**：装 3c20b1c 之后的包（版本号分钟级 `yyyyMMdd.HHmm-board`）：① 26键全拼输 `nihao`、9键输 `64` 出候选；② 26键不被左栏遮挡、设置菜单不被面板挡；③ Bar/HOME 效果；④ Android 8 回归。若仍无候选，`adb logcat -s BoardPanels` 抓日志。
 4. **签名与性能**（commit 56ca4d5）：CI 现在同时出 app-debug-apk 与 app-release-apk（自有 keystore=keystore/board.keystore，密码公开值 boardime2026，已入仓库；release=R8 优化，对齐上游 release 性能）。用户反馈的"emoji 极卡/输入不跟手"嫌疑主因是之前只出 debug 包；待用户装 release 复测。工具栏高度随键盘高度联动（min(候选区*0.8, 键盘高*0.22)）；面板宽度只随屏宽（左74%/右26%）避免高度拖动重建/横移；面板键间距 dp5 消除四角拼星纹。
 5. 应用名/包名仍是语燕默认（com.yuyan.pinyin），待用户确定后修改。
+
+## 七、模糊音/换方案计划（当前主线，源=rime-ice）
+
+**背景**：用户要模糊音+更好联想。Rime 模糊音必须重编译方案；上游无方案源（21 个 issue 未实现）。libyuyanime.so(4MB) 无 lua/无 octagram——万象原版方案跑不起来。用户最终选定 [rime-ice 雾凇拼音](https://github.com/iDvel/rime-ice) 作源，已克隆到 `../rime-ice`（shallow）。
+
+**方案矩阵对位**（rime-ice 覆盖 YuyanIme 几乎全部模式，schema_id 改名即可零代码切换）：
+- 全拼：rime_ice.schema.yaml → id 改 `pinyin`
+- 9键：t9.schema.yaml → id 改 `t9_pinyin`（rime-ice 自带 T9！）
+- 双拼：double_pinyin(自然码→`double_pinyin_natural`)、flypy/mspy/sogou/abc/ziguang id 本就一致
+- 英文：melt_eng → id 改 `english`（0 lua 引用）
+- 笔画/乱序17：rime-ice 没有，继续用上游旧编译产物
+- 每个方案需剥离 lua 组件（rime_ice 19 处、t9 4 处、双拼 ~17 处；melt_eng 0）——删 lua_processor/lua_translator/lua_filter 行
+- 词库：cn_dicts 48M（base17/ext12/tencent18/41448/8105/others）+ rime_ice.dict.yaml；可裁 tencent/ext 控体积
+- 必须带 rime-ice 的 default.yaml（schema 里 `__include: default:/punctuator`），其 schema_list 裁剪为实际打包的方案
+- 模糊音：rime_ice.schema.yaml 的 speller/algebra 里加 derive 规则（标准做法），设置界面开关组 → 生成 `<id>.custom.yaml` patch → 触发重部署（重启输入法生效）
+- 部署方式：设备端部署（startupRime fullCheck，Launcher 按 dataDictVersion 拷资产 → 需 bump CustomConstant.CURRENT_RIME_DICT_DATA_VERSIOM 强制重拷）；弱机首编可能数分钟
+- 风险：私有 fork 的部署器对标准方案的兼容性未验证；候选渲染依赖 RimeContext 字段，script_translator 类方案应兼容；失败回退=保留旧编译产物文件不冲突（新方案源文件名不与旧 .prism.bin/.table.bin 同名即安全，部署成功会生成同名产物覆盖…注意：id 改成 pinyin 部署后会覆盖旧 pinyin.table.bin——**回退手段=删除 assets 中新源后重装**）
+
+**实施顺序**：① rime_ice 全拼先行（剥 lua+改名+default.yaml+裁词库+bump 版本）验证部署出候选；② 9键/双拼/英文跟进；③ 模糊音设置 UI；④ 联想（引擎自带，万象 lua 联想确认无法用）
