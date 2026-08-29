@@ -2,10 +2,12 @@ package com.yuyan.imemodule.ui.fragment
 
 import com.yuyan.imemodule.application.CustomConstant
 import com.yuyan.imemodule.manager.InputModeSwitcher
+import com.yuyan.imemodule.application.Launcher
 import com.yuyan.imemodule.prefs.AppPrefs
 import com.yuyan.imemodule.prefs.behavior.DoublePinyinSchemaMode
 import com.yuyan.imemodule.ui.fragment.base.ManagedPreferenceFragment
 import com.yuyan.imemodule.view.preference.ManagedPreference
+import com.yuyan.imemodule.utils.FuzzyPinyin
 import com.yuyan.inputmethod.core.Kernel
 
 class InputSettingsFragment: ManagedPreferenceFragment(AppPrefs.getInstance().input){
@@ -13,6 +15,15 @@ class InputSettingsFragment: ManagedPreferenceFragment(AppPrefs.getInstance().in
     private val chineseFanTi = AppPrefs.getInstance().input.chineseFanTi
     private val emojiInput = AppPrefs.getInstance().input.emojiInput
     private val doublePYSchemaMode = AppPrefs.getInstance().input.doublePYSchemaMode
+    private val fuzzyPrefs = listOf(
+        AppPrefs.getInstance().input.fuzzyZhZ, AppPrefs.getInstance().input.fuzzyChC,
+        AppPrefs.getInstance().input.fuzzyShS, AppPrefs.getInstance().input.fuzzyNL,
+        AppPrefs.getInstance().input.fuzzyLR, AppPrefs.getInstance().input.fuzzyFH,
+        AppPrefs.getInstance().input.fuzzyAnAng, AppPrefs.getInstance().input.fuzzyEnEng,
+        AppPrefs.getInstance().input.fuzzyInIng)
+    private val fuzzyListener = ManagedPreference.OnChangeListener<Boolean> { _, _ ->
+        FuzzyPinyin.apply(Launcher.instance.context)
+    }
 
     private val switchKeyListener = ManagedPreference.OnChangeListener<Boolean> { _, _ ->
         Kernel.nativeUpdateImeOption()
@@ -26,6 +37,7 @@ class InputSettingsFragment: ManagedPreferenceFragment(AppPrefs.getInstance().in
         chineseFanTi.registerOnChangeListener(switchKeyListener)
         emojiInput.registerOnChangeListener(switchKeyListener)
         doublePYSchemaMode.registerOnChangeListener(schemaModeListener)
+        fuzzyPrefs.forEach { it.registerOnChangeListener(fuzzyListener) }
     }
 
     override fun onStop() {
@@ -33,5 +45,6 @@ class InputSettingsFragment: ManagedPreferenceFragment(AppPrefs.getInstance().in
         chineseFanTi.unregisterOnChangeListener(switchKeyListener)
         emojiInput.unregisterOnChangeListener(switchKeyListener)
         doublePYSchemaMode.unregisterOnChangeListener(schemaModeListener)
+        fuzzyPrefs.forEach { it.unregisterOnChangeListener(fuzzyListener) }
     }
 }

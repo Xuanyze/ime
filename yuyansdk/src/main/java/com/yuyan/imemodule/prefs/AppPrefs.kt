@@ -59,6 +59,16 @@ class AppPrefs(private val sharedPreferences: SharedPreferences) {
             R.string.setting_jian_fan, "chinese_jian_fan_enable", false
         )
 
+        val fuzzyZhZ = switch(R.string.fuzzy_zh_z, "fuzzy_zh_z", false)
+        val fuzzyChC = switch(R.string.fuzzy_ch_c, "fuzzy_ch_c", false)
+        val fuzzyShS = switch(R.string.fuzzy_sh_s, "fuzzy_sh_s", false)
+        val fuzzyNL = switch(R.string.fuzzy_n_l, "fuzzy_n_l", false)
+        val fuzzyLR = switch(R.string.fuzzy_l_r, "fuzzy_l_r", false)
+        val fuzzyFH = switch(R.string.fuzzy_f_h, "fuzzy_f_h", false)
+        val fuzzyAnAng = switch(R.string.fuzzy_an_ang, "fuzzy_an_ang", false)
+        val fuzzyEnEng = switch(R.string.fuzzy_en_eng, "fuzzy_en_eng", false)
+        val fuzzyInIng = switch(R.string.fuzzy_in_ing, "fuzzy_in_ing", false)
+
         val doublePYSchemaMode =
             list(
                 R.string.double_pinyin_schema_mode,

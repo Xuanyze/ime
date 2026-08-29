@@ -213,6 +213,15 @@
     <string name="board_scheme_double">双拼</string>
     <string name="board_scheme_t9">9键拼音</string>
     <string name="board_scheme_hand">手写</string>
+    <string name="fuzzy_zh_z">模糊音 zh/z（如：之=资）</string>
+    <string name="fuzzy_ch_c">模糊音 ch/c（如：吃=次）</string>
+    <string name="fuzzy_sh_s">模糊音 sh/s（如：是=四）</string>
+    <string name="fuzzy_n_l">模糊音 n/l（如：牛=刘）</string>
+    <string name="fuzzy_l_r">模糊音 l/r（如：兰=然）</string>
+    <string name="fuzzy_f_h">模糊音 f/h（如：发=哈）</string>
+    <string name="fuzzy_an_ang">模糊音 an/ang（如：班=帮）</string>
+    <string name="fuzzy_en_eng">模糊音 en/eng（如：真=蒸）</string>
+    <string name="fuzzy_in_ing">模糊音 in/ing（如：金=京）</string>
     <string name="export_user_data">导出用户数据</string>
     <string name="import_user_data">导入用户数据</string>
     <string name="app_log">日志</string>
