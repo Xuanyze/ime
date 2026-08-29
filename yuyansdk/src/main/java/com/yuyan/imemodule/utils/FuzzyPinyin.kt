@@ -51,9 +51,15 @@ object FuzzyPinyin {
         "en_eng" to listOf("derive/eng$/en/", "derive/en$/eng/"),
         "in_ing" to listOf("derive/ing$/in/", "derive/in$/ing/"))
 
+    private val BSN: String = "
+"
+
     private fun yamlPatch(rules: List<String>): String? =
         if (rules.isEmpty()) null
-        else "patch:"+BSN+"  speller/algebra/@next:"+BSN + rules.joinToString(BSN) { "    - " + it.replace("$",""+''+"" + "$") } + BSN
+        else "patch:" + BSN + "  speller/algebra/@next:" + BSN +
+            rules.joinToString(BSN) { "    - " + it.replace("$", BACKSLASH + "$") } + BSN
+
+    private val BACKSLASH: String = "\\"
 
     fun apply(context: Context) {
         runCatching {
