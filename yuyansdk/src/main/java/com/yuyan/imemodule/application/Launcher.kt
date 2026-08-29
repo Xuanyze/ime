@@ -11,6 +11,7 @@ import com.yuyan.imemodule.database.DataBaseKT
 import com.yuyan.imemodule.prefs.AppPrefs
 import com.yuyan.imemodule.service.ClipboardHelper
 import com.yuyan.imemodule.utils.AssetUtils.copyFileOrDir
+import com.yuyan.imemodule.utils.RimeUserdataGuard
 import com.yuyan.imemodule.utils.thread.ThreadPoolUtils
 import com.yuyan.inputmethod.core.Kernel
 
@@ -44,6 +45,7 @@ class Launcher {
                 copyFileOrDir(context, "hw", "", CustomConstant.HW_DICT_PATH, true)
                 AppPrefs.getInstance().internal.dataDictVersion.setValue(CustomConstant.CURRENT_RIME_DICT_DATA_VERSIOM)
             }
+            RimeUserdataGuard.limitUserdata(context)  //清理 userdb/日志防膨胀，必须早于 Rime 打开 userdb
             Kernel.resetIme()  // 解决词库复制慢，导致先调用初始化问题
             YuyanEmojiCompat.init(context)
             //初始化键盘主题
