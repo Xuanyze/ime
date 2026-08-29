@@ -15,15 +15,12 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.10.2"
+          cache: gradle
 
       - name: Build debug APK
-        run: gradle assembleDebug
+        run: ./gradlew assembleOfflineDebug --stacktrace
 
       - uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/offline/debug/*.apk
