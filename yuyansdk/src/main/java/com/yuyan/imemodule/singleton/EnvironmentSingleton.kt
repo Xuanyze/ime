@@ -1,6 +1,9 @@
 package com.yuyan.imemodule.singleton
 
 import android.content.Context
+import android.graphics.Point
+import android.os.Build
+import android.view.WindowManager
 import com.yuyan.imemodule.application.Launcher
 import com.yuyan.imemodule.data.theme.ThemeManager.prefs
 import com.yuyan.imemodule.prefs.AppPrefs
@@ -51,9 +54,18 @@ class EnvironmentSingleton private constructor() {
     fun initData(context: Context = Launcher.instance.context) {
         val resources = context.resources
         val dm = resources.displayMetrics
-        mScreenWidth = dm.widthPixels
-        mScreenHeight = dm.heightPixels
-        isLandscape = mScreenHeight <= mScreenWidth
+        // 班牌/平板分屏下 dm.widthPixels 可能是应用窗口宽度而非整屏，导致键盘宽度随窗口漂移；
+        // 键盘横跨整个屏幕，必须按物理显示器真实尺寸计算
+        val real = realDisplaySize(context)
+        val configurationLandscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        isLandscape = configurationLandscape
+        if (isLandscape) {
+            mScreenWidth = maxOf(real.x, real.y)
+            mScreenHeight = minOf(real.x, real.y)
+        } else {
+            mScreenWidth = minOf(real.x, real.y)
+            mScreenHeight = maxOf(real.x, real.y)
+        }
         var screenWidthVertical = mScreenWidth
         var screenHeightVertical = mScreenHeight
         if(keyboardModeFloat){
@@ -92,6 +104,19 @@ class EnvironmentSingleton private constructor() {
         keyXMargin = (prefs.keyXMargin.getValue() / 1000f * skbWidth).toInt()
         keyYMargin = (prefs.keyYMargin.getValue() / 1000f * skbHeight).toInt()
         inputAreaHeight = skbHeight + heightForCandidatesArea
+    }
+
+    /** 物理显示器真实尺寸（不受分屏/多窗口应用窗口影响） */
+    private fun realDisplaySize(context: Context): Point {
+        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val p = Point()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            wm.maximumWindowMetrics.bounds.let { p.x = it.width(); p.y = it.height() }
+        } else {
+            @Suppress("DEPRECATION")
+            wm.defaultDisplay.getRealSize(p)
+        }
+        return p
     }
 
     var keyBoardHeightRatio: Float

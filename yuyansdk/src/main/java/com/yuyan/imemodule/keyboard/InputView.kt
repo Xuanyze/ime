@@ -209,7 +209,13 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
         val env = EnvironmentSingleton.instance
         val enabled = env.isLandscape && !env.keyboardModeFloat && env.leftMarginWidth >= dp(120)
         LogUtil.d("BoardPanels", "updateBoardPanels enabled=$enabled landscape=${env.isLandscape} " +
-                "float=${env.keyboardModeFloat} margin=${env.leftMarginWidth} skbW=${env.skbWidth} skbH=${env.skbHeight}")
+                "float=${env.keyboardModeFloat} margin=${env.leftMarginWidth} skbW=${env.skbWidth} skbH=${env.skbHeight} screen=${env.mScreenWidth}x${env.mScreenHeight}")
+        if (enabled) {
+            // 键盘主区强制水平居中（ RelativeLayout gravity 在部分 ROM 上不生效，显式加规则兜底）
+            val skbView = mSkbRoot.findViewById<View>(R.id.skb_input_keyboard_view)
+            (skbView.layoutParams as? RelativeLayout.LayoutParams)?.apply {
+                addRule(CENTER_HORIZONTAL, RelativeLayout.TRUE)
+            }?.let { skbView.layoutParams = it }
         if (enabled) {
             val rail = SchemeRail(context, this)
             val column = FunctionColumn(context, this)
@@ -228,8 +234,13 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
                 addRule(ALIGN_TOP, keyboardViewId)
                 addRule(ALIGN_BOTTOM, keyboardViewId)
             }
-            mInputKeyboardContainer.addView(rail)
+            mInputKeyboardContainer.addView(rail, 0)
             mInputKeyboardContainer.addView(column)
+            post {
+                val kb = mSkbRoot.findViewById<View>(R.id.skb_input_keyboard_view)
+                LogUtil.d("BoardPanels", "post-layout container=${mInputKeyboardContainer.width} " +
+                        "skbView=(${kb.x},${kb.width}) rail=(${rail.x},${rail.width}) col=(${column.x},${column.width})")
+            }
         } else {
             mSchemeRail?.let { mInputKeyboardContainer.removeView(it) }
             mFunctionColumn?.let { mInputKeyboardContainer.removeView(it) }

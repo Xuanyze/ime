@@ -1,5 +1,6 @@
 package com.yuyan.imemodule.utils
 
+import android.util.Log
 import android.view.KeyEvent
 import com.yuyan.imemodule.application.CustomConstant
 import com.yuyan.imemodule.data.theme.ThemeManager
@@ -441,6 +442,7 @@ class KeyboardLoaderUtil private constructor() {
         if (softKeyboard == null || builtSize == null ||
             builtSize.first != EnvironmentSingleton.instance.skbWidth ||
             builtSize.second != EnvironmentSingleton.instance.skbHeight) {
+            Log.d("BoardPanels", "skb rebuild $skbValue built=$builtSize cur=${EnvironmentSingleton.instance.skbWidth}x${EnvironmentSingleton.instance.skbHeight}")
             softKeyboard = loadBaseSkb(skbValue)
         }
         return softKeyboard
