@@ -124,6 +124,12 @@ fun onSettingsMenuClick(inputView: InputView, skbMenuMode: SkbMenuMode) {
         SkbMenuMode.CloseSKB -> {
             inputView.requestHideSelf()
         }
+        SkbMenuMode.Bar -> {
+            inputView.barEscape()
+        }
+        SkbMenuMode.Home -> {
+            inputView.homeEscape()
+        }
         SkbMenuMode.SettingsMenu -> {
             if (KeyboardManager.instance.isInputKeyboard) {
                 KeyboardManager.instance.switchKeyboard(KeyboardManager.KeyboardType.SETTINGS)

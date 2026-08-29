@@ -96,6 +96,8 @@ abstract class DataBaseKT : RoomDatabase() {
                     SkbFun(name = SkbMenuMode.ClipBoard.name, isKeep = 1),
                     SkbFun(name = SkbMenuMode.Emojicon.name, isKeep = 1),
                     SkbFun(name = SkbMenuMode.TextEdit.name, isKeep = 1),
+                    SkbFun(name = SkbMenuMode.Bar.name, isKeep = 1),
+                    SkbFun(name = SkbMenuMode.Home.name, isKeep = 1),
                     SkbFun(name = SkbMenuMode.Emojicon.name, isKeep = 0, position = 0),
                     SkbFun(name = SkbMenuMode.SwitchKeyboard.name, isKeep = 0, position = 1),
                     SkbFun(name = SkbMenuMode.KeyboardHeight.name, isKeep = 0, position = 2),

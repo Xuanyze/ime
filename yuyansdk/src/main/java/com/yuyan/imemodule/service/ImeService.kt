@@ -1,13 +1,18 @@
 package com.yuyan.imemodule.service
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.inputmethodservice.InputMethodService
+import android.os.Build
 import android.os.SystemClock
 import android.text.InputType
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
+import android.view.WindowInsets
+import android.view.WindowManager
 import android.view.inputmethod.CursorAnchorInfo
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
@@ -86,6 +91,47 @@ class ImeService : InputMethodService() {
     override fun onStartInputView(editorInfo: EditorInfo, restarting: Boolean) {
         if (isSoftKeyboard)mInputView.onStartInputView(editorInfo, restarting)
         super.onStartInputView(editorInfo, restarting)
+    }
+
+    /**
+     * Bar：隐藏输入法，并尽力请求系统显示导航栏。
+     * 部分 ROM 不允许输入法窗口控制系统栏，此时退化为仅隐藏输入法，不允许崩溃。
+     */
+    fun barEscape() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                window.window?.let { win ->
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) showNavigationBarsR(win)
+                    else showNavigationBarsLegacy(win)
+                }
+            }
+        } catch (ignored: Exception) {
+        }
+        requestHideSelf(0)
+    }
+
+    private fun showNavigationBarsR(win: Window) {
+        win.insetsController?.show(WindowInsets.Type.navigationBars())
+    }
+
+    @Suppress("DEPRECATION")
+    private fun showNavigationBarsLegacy(win: Window) {
+        win.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        win.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+    }
+
+    /**
+     * HOME：隐藏输入法，并尝试回到 Android 桌面。
+     * 不杀死其他应用；ROM 拒绝启动 HOME 时退化为仅隐藏输入法，不允许崩溃。
+     */
+    fun homeEscape() {
+        try {
+            val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (ignored: Exception) {
+        }
+        requestHideSelf(0)
     }
 
     override fun onDestroy() {

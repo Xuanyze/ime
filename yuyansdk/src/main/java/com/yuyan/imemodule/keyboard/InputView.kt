@@ -603,6 +603,10 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
 
     fun requestHideSelf() = service.requestHideSelf(0)
 
+    fun barEscape() = service.barEscape()
+
+    fun homeEscape() = service.homeEscape()
+
     private fun sendKeyEvent(keyCode: Int) {
         if (isAddPhrases) {
             mAddPhrasesLayout.sendKeyEvent(keyCode)

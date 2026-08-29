@@ -27,4 +27,6 @@ val menuSkbFunsPreset: Map<SkbMenuMode, SkbFunItem> = hashMapOf(
     SkbMenuMode.AddPhrases to SkbFunItem(Launcher.instance.context.getString(R.string.add_phrases), R.drawable.ic_menu_plus, SkbMenuMode.AddPhrases),
     SkbMenuMode.LockClipBoard to SkbFunItem(Launcher.instance.context.getString(R.string.lock_view), R.drawable.icon_symbol_lock, SkbMenuMode.LockClipBoard),
     SkbMenuMode.TextEdit to SkbFunItem(Launcher.instance.context.getString(R.string.menu_text_edit), R.drawable.ic_menu_cursor_icon, SkbMenuMode.TextEdit),
+    SkbMenuMode.Bar to SkbFunItem(Launcher.instance.context.getString(R.string.skb_menu_bar), R.drawable.ic_menu_bar, SkbMenuMode.Bar),
+    SkbMenuMode.Home to SkbFunItem(Launcher.instance.context.getString(R.string.skb_menu_home), R.drawable.ic_menu_home, SkbMenuMode.Home),
     )

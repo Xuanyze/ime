@@ -207,6 +207,8 @@
     <string name="x_recycler_load_more_message">正在加载更多数据，请稍后</string>
     <string name="lock_view">锁定键盘</string>
     <string name="menu_text_edit">文本编辑</string>
+    <string name="skb_menu_bar">Bar</string>
+    <string name="skb_menu_home">HOME</string>
     <string name="export_user_data">导出用户数据</string>
     <string name="import_user_data">导入用户数据</string>
     <string name="app_log">日志</string>
