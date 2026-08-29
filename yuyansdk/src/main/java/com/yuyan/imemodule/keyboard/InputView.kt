@@ -241,10 +241,8 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
                 addRule(END_OF, rail.id)
             }?.let { skbView.layoutParams = it }
             // 工具栏通栏铺满，菜单图标自然靠右
-            (mSkbCandidatesBarView.layoutParams as? RelativeLayout.LayoutParams)?.let {
-                it.width = env.inputAreaWidth
-                mSkbCandidatesBarView.layoutParams = it
-            }
+            mSkbCandidatesBarView.boardFullWidth = true
+            mSkbCandidatesBarView.requestLayout()
             post {
                 LogUtil.d("BoardPanels", "post-layout container=${mInputKeyboardContainer.width} " +
                         "skbView=(${skbView.x},${skbView.width}) left=(${rail.x},${rail.width}) right=(${column.x},${column.width})")
@@ -258,10 +256,8 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
                 addRule(CENTER_HORIZONTAL, 0)
                 addRule(END_OF, 0)
             }?.let { skbView.layoutParams = it }
-            (mSkbCandidatesBarView.layoutParams as? RelativeLayout.LayoutParams)?.let {
-                it.width = LayoutParams.WRAP_CONTENT
-                mSkbCandidatesBarView.layoutParams = it
-            }
+            mSkbCandidatesBarView.boardFullWidth = false
+            mSkbCandidatesBarView.requestLayout()
         }
     }
 

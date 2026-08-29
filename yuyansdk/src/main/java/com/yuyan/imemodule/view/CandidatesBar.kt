@@ -365,9 +365,13 @@ class CandidatesBar(context: Context?, attrs: AttributeSet?) : RelativeLayout(co
         }
     }
 
+    /** 班牌横屏模式：候选条/工具栏通栏铺满整屏（图标靠右），默认仍为 skbWidth */
+    var boardFullWidth = false
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val heightMeasure = MeasureSpec.makeMeasureSpec(instance.heightForCandidatesArea, MeasureSpec.EXACTLY)
-        val widthMeasure = MeasureSpec.makeMeasureSpec(instance.skbWidth, MeasureSpec.EXACTLY)
+        val width = if (boardFullWidth) instance.inputAreaWidth else instance.skbWidth
+        val widthMeasure = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
         super.onMeasure(widthMeasure, heightMeasure)
     }
 
