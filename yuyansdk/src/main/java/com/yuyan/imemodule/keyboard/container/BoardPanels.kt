@@ -17,18 +17,20 @@ import com.yuyan.imemodule.data.theme.ThemeManager
 import com.yuyan.imemodule.keyboard.InputView
 import com.yuyan.imemodule.manager.InputModeSwitcher
 import com.yuyan.imemodule.prefs.AppPrefs
+import com.yuyan.imemodule.prefs.behavior.SkbMenuMode
 import com.yuyan.imemodule.singleton.EnvironmentSingleton
 import com.yuyan.imemodule.utils.DevicesUtils
 import com.yuyan.inputmethod.core.Kernel
 import splitties.dimensions.dp
 
 /**
- * 班牌横屏三栏布局的左栏：输入方案选择。
- * 固定三项：26键全拼 / 双拼 / 9键拼音，高亮当前方案，点击直接切换 Rime schema。
- * 复用 InputModeSwitcher.switchModeForSetting（与设置页"选择输入方案"同一条链路）。
+ * 班牌横屏三栏布局的左栏：输入方案选择 + 数字小键盘。
+ * 左列固定四键：26键全拼 / 双拼 / 9键拼音 / 表情（高度约等于主键盘一行），
+ * 右列为数字小键盘（7-9/4-6/1-3/·0退格）。
+ * 方案切换复用 InputModeSwitcher.switchModeForSetting（与设置页"选择输入方案"同一条链路）。
  */
 @SuppressLint("ViewConstructor")
-class SchemeRail(context: Context, private val inputView: InputView) : LinearLayout(context) {
+class BoardLeftPanel(context: Context, private val inputView: InputView) : LinearLayout(context) {
 
     private class SchemeOption(
         val title: String,
@@ -51,12 +53,36 @@ class SchemeRail(context: Context, private val inputView: InputView) : LinearLay
     private val titleViews: List<TextView>
 
     init {
-        orientation = VERTICAL
+        orientation = HORIZONTAL
         setPadding(dp(4), dp(4), dp(4), dp(4))
-        titleViews = options.map { option ->
-            boardPanelButton(option.title, EnvironmentSingleton.instance.keyTextSize) { switchTo(option) }
+        val env = EnvironmentSingleton.instance
+        val schemeSize = (env.keyTextSize * 0.8f).toInt()
+
+        val schemeButtons = options.map { option ->
+            boardPanelButton(context, option.title, schemeSize) { switchTo(option) }
+        } + boardPanelButton(context, "表情", schemeSize) { inputView.onSettingsMenuClick(SkbMenuMode.Emojicon) }
+        titleViews = schemeButtons
+
+        val schemesCol = LinearLayout(context).apply { orientation = VERTICAL }
+        schemeButtons.forEach { view ->
+            schemesCol.addView(view, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
         }
-        titleViews.forEach { addView(it, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)) }
+
+        fun numberRow(vararg buttons: View): LinearLayout = LinearLayout(context).apply {
+            orientation = HORIZONTAL
+            buttons.forEach { addView(it, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)) }
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
+        }
+
+        val numberPad = LinearLayout(context).apply { orientation = VERTICAL }
+        val numSize = env.keyTextSize
+        numberPad.addView(numberRow(boardPanelButton(context, "7", numSize) { inputView.panelCommitText("7") }, boardPanelButton(context, "8", numSize) { inputView.panelCommitText("8") }, boardPanelButton(context, "9", numSize) { inputView.panelCommitText("9") }))
+        numberPad.addView(numberRow(boardPanelButton(context, "4", numSize) { inputView.panelCommitText("4") }, boardPanelButton(context, "5", numSize) { inputView.panelCommitText("5") }, boardPanelButton(context, "6", numSize) { inputView.panelCommitText("6") }))
+        numberPad.addView(numberRow(boardPanelButton(context, "1", numSize) { inputView.panelCommitText("1") }, boardPanelButton(context, "2", numSize) { inputView.panelCommitText("2") }, boardPanelButton(context, "3", numSize) { inputView.panelCommitText("3") }))
+        numberPad.addView(numberRow(boardPanelButton(context, "·", numSize) { inputView.panelCommitText(".") }, boardPanelButton(context, "0", numSize) { inputView.panelCommitText("0") }, boardPanelButton(context, "⌫", numSize) { inputView.panelBackspace() }))
+
+        addView(schemesCol, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f))
+        addView(numberPad, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1.8f))
         refresh()
     }
 
@@ -68,27 +94,27 @@ class SchemeRail(context: Context, private val inputView: InputView) : LinearLay
 
     /** 当前方案高亮（每次键盘切换后由 InputView.updateCandidateBar 调用） */
     fun refresh() {
+        val theme = ThemeManager.activeTheme
         titleViews.forEachIndexed { index, view ->
+            if (index >= options.size) return@forEachIndexed
             val active = runCatching { options[index].match() }.getOrDefault(false)
-            val theme = ThemeManager.activeTheme
-            (view.background as? GradientDrawable)?.setColor(if (active) theme.accentKeyBackgroundColor else theme.functionKeyBackgroundColor)
+            (view.background as? GradientDrawable)?.setColor(if (active) theme.accentKeyBackgroundColor else theme.keyBackgroundColor)
             view.setTextColor(if (active) theme.accentKeyTextColor else theme.keyTextColor)
         }
     }
 }
 
 /**
- * 班牌横屏三栏布局的右栏：数字小键盘 + 编辑功能。
- * 左半：数字小键盘（7-9/4-6/1-3/.0退格）与常用中文符号；右半：方向键/Home/End/Delete 与 Ctrl 组合键。
- * 所有行为复用现有按键链路（InputView 的 sendKeyEvent / processKeyUp / 编辑键处理）。
+ * 班牌横屏三栏布局的右栏：编辑功能。
+ * 方向键/Home/End/退格/Delete + 全选/复制/剪切/粘贴，全部复用现有编辑键链路，无假功能。
  */
 @SuppressLint("ViewConstructor")
-class FunctionColumn(context: Context, private val inputView: InputView) : LinearLayout(context) {
+class BoardRightPanel(context: Context, private val inputView: InputView) : LinearLayout(context) {
 
     init {
-        orientation = HORIZONTAL
+        orientation = VERTICAL
         setPadding(dp(4), dp(4), dp(4), dp(4))
-        val textSize = EnvironmentSingleton.instance.keyTextSmallSize
+        val textSize = (EnvironmentSingleton.instance.keyTextSmallSize * 1.15f).toInt()
 
         fun row(vararg buttons: View): LinearLayout = LinearLayout(context).apply {
             orientation = HORIZONTAL
@@ -96,32 +122,20 @@ class FunctionColumn(context: Context, private val inputView: InputView) : Linea
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
         }
 
-        val numberPad = LinearLayout(context).apply {
-            orientation = VERTICAL
-            addView(row(boardPanelButton("7", textSize) { inputView.panelCommitText("7") }, boardPanelButton("8", textSize) { inputView.panelCommitText("8") }, boardPanelButton("9", textSize) { inputView.panelCommitText("9") }))
-            addView(row(boardPanelButton("4", textSize) { inputView.panelCommitText("4") }, boardPanelButton("5", textSize) { inputView.panelCommitText("5") }, boardPanelButton("6", textSize) { inputView.panelCommitText("6") }))
-            addView(row(boardPanelButton("1", textSize) { inputView.panelCommitText("1") }, boardPanelButton("2", textSize) { inputView.panelCommitText("2") }, boardPanelButton("3", textSize) { inputView.panelCommitText("3") }))
-            addView(row(boardPanelButton(".", textSize) { inputView.panelCommitText(".") }, boardPanelButton("0", textSize) { inputView.panelCommitText("0") }, boardPanelButton("⌫", textSize) { inputView.panelBackspace() }))
-            addView(row(boardPanelButton("，", textSize) { inputView.panelCommitText("，") }, boardPanelButton("。", textSize) { inputView.panelCommitText("。") }, boardPanelButton("？", textSize) { inputView.panelCommitText("？") }))
-            addView(row(boardPanelButton("！", textSize) { inputView.panelCommitText("！") }, boardPanelButton("：", textSize) { inputView.panelCommitText("：") }, boardPanelButton("、", textSize) { inputView.panelCommitText("、") }))
-        }
-
-        val editPad = LinearLayout(context).apply {
-            orientation = VERTICAL
-            addView(row(boardPanelButton("↑", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_UP) }, boardPanelButton("↓", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_DOWN) }))
-            addView(row(boardPanelButton("←", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_LEFT) }, boardPanelButton("→", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_RIGHT) }))
-            addView(row(boardPanelButton("Home", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_MOVE_START) }, boardPanelButton("End", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_MOVE_END) }))
-            addView(row(boardPanelButton("Del", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_FORWARD_DEL) }, boardPanelButton("⌫", textSize) { inputView.panelBackspace() }))
-            addView(row(boardPanelButton("Ctrl+A", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_SELECT_ALL) }, boardPanelButton("Ctrl+C", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_COPY) }))
-            addView(row(boardPanelButton("Ctrl+X", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_CUT) }, boardPanelButton("Ctrl+V", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_PASTE) }))
-        }
-
-        addView(numberPad, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1.2f))
-        addView(editPad, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f))
+        addView(row(boardPanelButton(context, "↑", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_UP) }, boardPanelButton(context, "↓", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_DOWN) }))
+        addView(row(boardPanelButton(context, "←", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_LEFT) }, boardPanelButton(context, "→", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_RIGHT) }))
+        addView(row(boardPanelButton(context, "Home", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_MOVE_START) }, boardPanelButton(context, "End", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_MOVE_END) }))
+        addView(row(boardPanelButton(context, "⌫", textSize) { inputView.panelBackspace() }, boardPanelButton(context, "Del", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_FORWARD_DEL) }))
+        addView(row(boardPanelButton(context, "全选", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_SELECT_ALL) }, boardPanelButton(context, "复制", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_COPY) }))
+        addView(row(boardPanelButton(context, "剪切", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_CUT) }, boardPanelButton(context, "粘贴", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_PASTE) }))
     }
 }
 
-/** 班牌侧栏按钮：中性圆角、主题配色、明显按压反馈；长标签自动缩小字号且不折行 */
+/**
+ * 班牌侧栏按键：白底圆角 + 细边框（参考百度皮肤"程序员娱乐"的简洁风格，
+ * 不照搬图片素材，颜色仍取自当前主题以适配深色模式）。
+ * 长标签自动缩小字号且不折行。
+ */
 private fun View.boardPanelButton(label: String, textSizePx: Int, onClick: () -> Unit): TextView {
     val view = TextView(context)
     view.gravity = Gravity.CENTER
@@ -133,10 +147,13 @@ private fun View.boardPanelButton(label: String, textSizePx: Int, onClick: () ->
         else -> (textSizePx * 0.58f).toInt()
     }
     view.setTextSize(TypedValue.COMPLEX_UNIT_PX, fittedSize.toFloat())
-    view.setTextColor(ThemeManager.activeTheme.keyTextColor)
+    val theme = ThemeManager.activeTheme
+    view.setTextColor(theme.keyTextColor)
     view.background = GradientDrawable().apply {
-        cornerRadius = dp(8).toFloat()
-        setColor(ThemeManager.activeTheme.functionKeyBackgroundColor)
+        cornerRadius = dp(12).toFloat()
+        setColor(theme.keyBackgroundColor)
+        // 细边框：取按键文字颜色的 RGB，固定 13% 透明度
+        setStroke(dp(1), 0x22000000 or (theme.keyTextColor and 0x00FFFFFF))
     }
     view.setPadding(dp(2), dp(2), dp(2), dp(2))
     view.isClickable = true

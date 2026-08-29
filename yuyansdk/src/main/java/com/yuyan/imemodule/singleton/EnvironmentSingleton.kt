@@ -81,8 +81,9 @@ class EnvironmentSingleton private constructor() {
         // 按键 + 后续高度，值是相对于竖屏宽度，横屏高度。
         if(isLandscape && !keyboardModeFloat){
             inputAreaWidth = mScreenWidth
-            // 班牌横屏三栏：主输入区收窄到 60%，两侧各留 20% 给方案选择栏与数字/编辑功能栏
-            skbWidth = (skbWidth * 0.6).toInt()
+            // 班牌横屏三栏：主输入区收窄到 56%，两侧各留 22%——
+            // 左侧为"方案选择+数字小键盘"双列面板，右侧为编辑功能面板
+            skbWidth = (skbWidth * 0.56f).toInt()
             keyboardHeightRatio = AppPrefs.getInstance().internal.keyboardHeightRatioLandscape.getValue()
             candidatesHeightRatio = AppPrefs.getInstance().internal.candidatesHeightRatioLandscape.getValue()
         } else {

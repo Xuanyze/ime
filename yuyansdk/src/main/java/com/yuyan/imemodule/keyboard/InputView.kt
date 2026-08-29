@@ -36,8 +36,8 @@ import com.yuyan.imemodule.entity.StringQueue
 import com.yuyan.imemodule.entity.keyboard.SoftKey
 import com.yuyan.imemodule.keyboard.container.CandidatesContainer
 import com.yuyan.imemodule.keyboard.container.ClipBoardContainer
-import com.yuyan.imemodule.keyboard.container.FunctionColumn
-import com.yuyan.imemodule.keyboard.container.SchemeRail
+import com.yuyan.imemodule.keyboard.container.BoardRightPanel
+import com.yuyan.imemodule.keyboard.container.BoardLeftPanel
 import com.yuyan.imemodule.keyboard.container.SymbolContainer
 import com.yuyan.imemodule.keyboard.container.T9TextContainer
 import com.yuyan.imemodule.manager.InputModeSwitcher
@@ -89,8 +89,8 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
     private lateinit var mRightPaddingKey: ManagedPreference.PInt
     private lateinit var mBottomPaddingKey: ManagedPreference.PInt
     private var mFullDisplayKeyboardBar: FullDisplayKeyboardBar? = null
-    private var mSchemeRail: SchemeRail? = null
-    private var mFunctionColumn: FunctionColumn? = null
+    private var mLeftPanel: BoardLeftPanel? = null
+    private var mRightPanel: BoardRightPanel? = null
     var hasSelection = false
     var hasSelectionAll = false
     // 记录删除内容
@@ -202,7 +202,7 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
 
     /**
      * 班牌横屏三栏布局：横屏（非悬浮）时，在键盘两侧的空白边距上挂载
-     * 左侧方案选择栏[SchemeRail]与右侧数字/编辑功能栏[FunctionColumn]。
+     * 左侧方案+数字面板[BoardLeftPanel]与右侧编辑功能面板[BoardRightPanel]。
      * 竖屏或悬浮模式不挂载，保持原布局。
      */
     private fun updateBoardPanels(context: Context) {
@@ -216,12 +216,12 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
             (skbView.layoutParams as? RelativeLayout.LayoutParams)?.apply {
                 addRule(CENTER_HORIZONTAL, RelativeLayout.TRUE)
             }?.let { skbView.layoutParams = it }
-            val rail = SchemeRail(context, this)
-            val column = FunctionColumn(context, this)
-            mSchemeRail?.let { mInputKeyboardContainer.removeView(it) }
-            mFunctionColumn?.let { mInputKeyboardContainer.removeView(it) }
-            mSchemeRail = rail
-            mFunctionColumn = column
+            val rail = BoardLeftPanel(context, this)
+            val column = BoardRightPanel(context, this)
+            mLeftPanel?.let { mInputKeyboardContainer.removeView(it) }
+            mRightPanel?.let { mInputKeyboardContainer.removeView(it) }
+            mLeftPanel = rail
+            mRightPanel = column
             val keyboardViewId = mSkbRoot.findViewById<View>(R.id.skb_input_keyboard_view).id
             rail.layoutParams = LayoutParams(env.leftMarginWidth, env.skbHeight).apply {
                 addRule(ALIGN_PARENT_START)
@@ -238,13 +238,13 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
             post {
                 val kb = mSkbRoot.findViewById<View>(R.id.skb_input_keyboard_view)
                 LogUtil.d("BoardPanels", "post-layout container=${mInputKeyboardContainer.width} " +
-                        "skbView=(${kb.x},${kb.width}) rail=(${rail.x},${rail.width}) col=(${column.x},${column.width})")
+                        "skbView=(${kb.x},${kb.width}) left=(${rail.x},${rail.width}) right=(${column.x},${column.width})")
             }
         } else {
-            mSchemeRail?.let { mInputKeyboardContainer.removeView(it) }
-            mFunctionColumn?.let { mInputKeyboardContainer.removeView(it) }
-            mSchemeRail = null
-            mFunctionColumn = null
+            mLeftPanel?.let { mInputKeyboardContainer.removeView(it) }
+            mRightPanel?.let { mInputKeyboardContainer.removeView(it) }
+            mLeftPanel = null
+            mRightPanel = null
         }
     }
 
@@ -594,9 +594,9 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
         mSkbCandidatesBarView.scheduleShowCandidates()
         // 班牌侧栏只在输入键盘上显示；设置/符号/剪贴板等全宽容器会被遮挡
         val inputKeyboard = KeyboardManager.instance.isInputKeyboard
-        mSchemeRail?.visibility = if (inputKeyboard) VISIBLE else GONE
-        mFunctionColumn?.visibility = if (inputKeyboard) VISIBLE else GONE
-        mSchemeRail?.runCatching { refresh() }
+        mLeftPanel?.visibility = if (inputKeyboard) VISIBLE else GONE
+        mRightPanel?.visibility = if (inputKeyboard) VISIBLE else GONE
+        mLeftPanel?.runCatching { refresh() }
     }
 
     private fun resetCandidateWindow() {
