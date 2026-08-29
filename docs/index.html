@@ -3,247 +3,205 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>班牌输入法 · 为电子班牌而生的横屏输入法</title>
-<meta name="description" content="基于 Rime 与雾凇词库的电子智能班牌专用横屏输入法：三栏布局、Bar/HOME 一键逃生、完全离线、轻量稳定。">
+<title>班牌输入法 — 为电子班牌而生的横屏输入法</title>
+<meta name="description" content="基于 Rime 与雾凇词库的电子智能班牌专用横屏输入法。三栏布局、Bar/HOME 一键逃生、完全离线。">
 <style>
 :root{
-  --bg:#0a0e1a; --ink:#eef2ff; --sub:#9aa7c7; --accent:#5eead4; --accent2:#818cf8;
-  --glass:rgba(255,255,255,.06); --glass-brd:rgba(255,255,255,.14);
-  --radius:22px; --maxw:1080px;
+  --paper:#f4f3ee; --ink:#141310; --sub:#6d6a60; --accent:#0c7a67; --line:#d9d6cc;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+  --sans:"PingFang SC","Source Han Sans SC","Microsoft YaHei",system-ui,sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{
-  background:var(--bg); color:var(--ink);
-  font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
-  line-height:1.8; overflow-x:hidden;
-}
-::selection{background:rgba(94,234,212,.3)}
-/* ── 背景光斑 ── */
-.blobs{position:fixed;inset:0;z-index:-2;overflow:hidden;filter:blur(90px);opacity:.55}
-.blob{position:absolute;border-radius:50%;mix-blend-mode:screen;animation:drift 26s ease-in-out infinite alternate}
-.b1{width:56vmax;height:56vmax;left:-18vmax;top:-16vmax;background:radial-gradient(circle at 35% 35%,#134e4a,#0b2a4a 60%,transparent 75%)}
-.b2{width:48vmax;height:48vmax;right:-16vmax;top:22vh;background:radial-gradient(circle at 60% 40%,#312e81,#1e1b4b 55%,transparent 75%);animation-delay:-8s}
-.b3{width:40vmax;height:40vmax;left:22vw;bottom:-18vmax;background:radial-gradient(circle at 50% 50%,#115e59,#082f49 60%,transparent 78%);animation-delay:-16s}
-@keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(6vw,-4vh,0) scale(1.15)}}
-.grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-/* ── 玻璃通用 ── */
-.glass{background:var(--glass);border:1px solid var(--glass-brd);border-radius:var(--radius);
-  backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);
-  box-shadow:0 8px 32px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08)}
-/* ── 导航 ── */
-nav{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:50;width:min(92%,860px);
-  display:flex;align-items:center;justify-content:space-between;padding:10px 22px;border-radius:999px}
-nav .logo{font-weight:700;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
-nav .logo .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 12px var(--accent)}
-nav a{color:var(--sub);text-decoration:none;font-size:14px;margin-left:20px;transition:color .25s}
-nav a:hover{color:var(--ink)}
-nav .gh{color:var(--ink);border:1px solid var(--glass-brd);border-radius:999px;padding:5px 14px;margin-left:20px;transition:.25s}
-nav .gh:hover{border-color:var(--accent);box-shadow:0 0 18px rgba(94,234,212,.25)}
-/* ── 首屏 ── */
-header{min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;
-  text-align:center;padding:120px 20px 60px;position:relative}
-.badge{display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:999px;font-size:13px;color:var(--accent);letter-spacing:2px}
-.badge::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2s infinite}
-@keyframes pulse{50%{opacity:.4}}
-h1{font-size:clamp(38px,7.5vw,76px);font-weight:800;line-height:1.25;margin:26px 0 10px;letter-spacing:1px}
-h1 .grad{background:linear-gradient(100deg,var(--accent),var(--accent2) 55%,#f0abfc);-webkit-background-clip:text;background-clip:text;color:transparent;background-size:200% 100%;animation:shine 7s linear infinite}
-@keyframes shine{to{background-position:200% 0}}
-.sub{max-width:640px;color:var(--sub);font-size:clamp(15px,2vw,18px)}
-.cta{margin-top:38px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
-.btn{padding:13px 30px;border-radius:999px;text-decoration:none;font-size:15px;font-weight:600;transition:.3s}
-.btn.primary{color:#052e2b;background:linear-gradient(120deg,var(--accent),#7dd3fc);box-shadow:0 6px 30px rgba(94,234,212,.35)}
-.btn.primary:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(94,234,212,.5)}
-.btn.ghost{color:var(--ink);border:1px solid var(--glass-brd);backdrop-filter:blur(10px)}
-.btn.ghost:hover{border-color:var(--accent);transform:translateY(-3px)}
-.stats{margin-top:56px;display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
-.stat{padding:16px 30px;text-align:center;min-width:130px}
-.stat b{display:block;font-size:24px;background:linear-gradient(120deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
-.stat span{font-size:12.5px;color:var(--sub)}
-.scroll-hint{position:absolute;bottom:26px;color:var(--sub);font-size:12px;letter-spacing:3px;animation:bob 2.2s ease-in-out infinite}
-@keyframes bob{50%{transform:translateY(8px);opacity:.5}}
-/* ── 章节骨架 ── */
-main{max-width:var(--maxw);margin:0 auto;padding:0 22px}
-section{padding:90px 0}
-.sec-tag{font-size:13px;color:var(--accent);letter-spacing:4px;margin-bottom:12px}
-h2{font-size:clamp(26px,4vw,40px);font-weight:750;margin-bottom:16px}
-.lead{color:var(--sub);max-width:680px;margin-bottom:44px}
-.reveal{opacity:0;transform:translateY(34px);transition:opacity .8s cubic-bezier(.2,.6,.2,1),transform .8s cubic-bezier(.2,.6,.2,1)}
-.reveal.in{opacity:1;transform:none}
-/* ── 键盘演示 ── */
-.kb-wrap{padding:clamp(16px,3vw,34px);border-radius:30px}
-.kb{display:grid;grid-template-columns:19% 1fr 13%;gap:10px;border-radius:16px;
-  background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));padding:12px;min-height:300px}
-.kb .col{display:flex;flex-direction:column;gap:8px}
-.k{flex:1;display:flex;align-items:center;justify-content:center;border-radius:10px;font-size:13px;color:var(--ink);
-  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.08);transition:.25s;user-select:none}
-.k:hover{background:rgba(94,234,212,.22);border-color:var(--accent);transform:translateY(-2px)}
-.k.on{background:linear-gradient(120deg,rgba(94,234,212,.85),rgba(125,211,252,.85));color:#052e2b;font-weight:700;border:none}
-.k.num{font-size:17px}
-.kb .cand{grid-column:1/-1;height:38px;display:flex;align-items:center;gap:18px;padding:0 16px;border-radius:10px;
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);font-size:14px;color:var(--sub);overflow:hidden}
-.kb .cand .py{color:var(--accent);font-family:ui-monospace,monospace}
-.kb .cand .word{color:var(--ink)}
-.kb .cand .word.hl{color:var(--accent);font-weight:700}
-@media(max-width:760px){.kb{grid-template-columns:1fr 2fr}.kb .col.right{display:none}}
-/* ── 特性卡片 ── */
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
-.card{padding:30px 26px;transition:transform .35s,border-color .35s,box-shadow .35s;position:relative;overflow:hidden}
-.card::after{content:"";position:absolute;inset:0;background:radial-gradient(500px circle at var(--mx,50%) var(--my,50%),rgba(94,234,212,.12),transparent 45%);opacity:0;transition:opacity .35s;pointer-events:none}
-.card:hover{transform:translateY(-6px);border-color:rgba(94,234,212,.4);box-shadow:0 16px 44px rgba(0,0,0,.45)}
-.card:hover::after{opacity:1}
-.card .ico{font-size:26px;width:54px;height:54px;display:flex;align-items:center;justify-content:center;border-radius:16px;
-  background:linear-gradient(135deg,rgba(94,234,212,.16),rgba(129,140,248,.16));border:1px solid var(--glass-brd);margin-bottom:18px}
-.card h3{font-size:17.5px;margin-bottom:8px}
-.card p{font-size:14px;color:var(--sub)}
-/* ── 沉浸段落 ── */
-.story{border-left:2px solid rgba(94,234,212,.4);padding:8px 0 8px 30px;margin:10px 0}
-.story p{color:var(--ink);font-size:clamp(17px,2.4vw,21px);max-width:760px;margin:18px 0;font-weight:560}
-.story p em{font-style:normal;color:var(--accent)}
-/* ── 路线 ── */
-.timeline{position:relative;margin-top:20px;padding-left:26px}
-.timeline::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:linear-gradient(var(--accent),transparent)}
-.tl{position:relative;padding:14px 0 14px 18px}
-.tl::before{content:"";position:absolute;left:-25px;top:24px;width:11px;height:11px;border-radius:50%;
-  background:var(--bg);border:2px solid var(--accent);box-shadow:0 0 10px rgba(94,234,212,.6)}
-.tl b{display:block;font-size:16px}
-.tl.done b::after{content:" ✓";color:var(--accent)}
-.tl span{font-size:13.5px;color:var(--sub)}
-.tl.todo{opacity:.55}.tl.todo::before{border-color:var(--sub);box-shadow:none}
-/* ── 页脚 ── */
-footer{max-width:var(--maxw);margin:40px auto 0;padding:40px 22px 60px;color:var(--sub);font-size:13px;
-  display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.08)}
-footer a{color:var(--accent);text-decoration:none}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.9;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:#fff}
+a{color:inherit}
+.wrap{max-width:1160px;margin:0 auto;padding:0 clamp(18px,4vw,48px)}
+
+/* 顶栏 */
+.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;justify-content:space-between;align-items:center;height:58px}
+.brand{font-weight:800;letter-spacing:2px;font-size:15px}
+.brand i{font-style:normal;color:var(--accent)}
+.top nav{display:flex;gap:26px;font-family:var(--mono);font-size:12.5px}
+.top nav a{text-decoration:none;color:var(--sub);position:relative;padding:4px 0}
+.top nav a::after{content:"";position:absolute;left:0;bottom:0;height:1.5px;width:0;background:var(--accent);transition:width .28s}
+.top nav a:hover{color:var(--ink)}
+.top nav a:hover::after{width:100%}
+
+/* Hero */
+.hero{padding:clamp(64px,10vh,120px) 0 40px}
+.kicker{font-family:var(--mono);font-size:12px;letter-spacing:.35em;color:var(--accent);text-transform:uppercase}
+h1{font-size:clamp(44px,9vw,108px);line-height:1.14;font-weight:900;letter-spacing:.01em;margin:18px 0 8px}
+h1 .thin{font-weight:300;color:var(--sub)}
+.hero-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));border-top:1.5px solid var(--ink);border-bottom:1px solid var(--line);margin-top:44px}
+.hm{padding:16px 18px 14px;border-left:1px solid var(--line)}
+.hm:first-child{border-left:none}
+.hm b{display:block;font-family:var(--mono);font-size:clamp(18px,2.4vw,24px);font-weight:700}
+.hm span{font-family:var(--mono);font-size:11px;color:var(--sub);letter-spacing:.12em}
+.hero-img{margin:52px 0 8px;border:1.5px solid var(--ink);overflow:hidden;background:#000}
+.hero-img img{display:block;width:100%;height:auto}
+.figcap{font-family:var(--mono);font-size:11.5px;color:var(--sub);padding:10px 2px 0;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* 跑马灯 */
+.tick{border-top:1.5px solid var(--ink);border-bottom:1px solid var(--line);overflow:hidden;margin:64px 0 0;padding:12px 0;white-space:nowrap}
+.tick-in{display:inline-block;animation:mq 26s linear infinite;font-family:var(--mono);font-size:13px;letter-spacing:.2em;color:var(--sub)}
+.tick-in b{color:var(--accent);font-weight:600;margin:0 18px}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* 章节 */
+section{padding:clamp(70px,10vh,120px) 0 0}
+.secnum{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.3em}
+h2{font-size:clamp(28px,4.6vw,52px);font-weight:900;line-height:1.25;margin:10px 0 14px}
+.lead{color:var(--sub);max-width:620px;font-size:clamp(15px,1.8vw,17px);margin-bottom:44px}
+
+/* 特性行列表 */
+.rows{border-top:1.5px solid var(--ink)}
+.row{display:grid;grid-template-columns:88px 240px 1fr;gap:20px;padding:26px 4px;border-bottom:1px solid var(--line);align-items:baseline;transition:background .25s}
+.row:hover{background:#eeece4}
+.row .no{font-family:var(--mono);font-size:12px;color:var(--accent)}
+.row h3{font-size:clamp(17px,2.2vw,21px);font-weight:800}
+.row p{color:var(--sub);font-size:14.5px}
+@media(max-width:760px){.row{grid-template-columns:1fr}.row .no{order:-1}}
+
+/* 实机双图 */
+.shots{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;margin-top:10px}
+@media(max-width:820px){.shots{grid-template-columns:1fr}}
+.shot{border:1.5px solid var(--ink);overflow:hidden;background:#000;transition:transform .35s}
+.shot:hover{transform:translateY(-4px)}
+.shot img{display:block;width:100%;height:100%;object-fit:cover}
+
+/* 理念 */
+.mani{font-size:clamp(20px,3.4vw,34px);font-weight:700;line-height:1.7;max-width:900px;margin-top:8px}
+.mani em{font-style:normal;box-shadow:inset 0 -.34em 0 color-mix(in srgb,var(--accent) 30%,transparent)}
+.mani .gap{display:block;height:.9em}
+.note{font-family:var(--mono);font-size:12px;color:var(--sub);margin-top:34px}
+
+/* 路线 */
+.map{border-top:1.5px solid var(--ink)}
+.mi{display:grid;grid-template-columns:110px 1fr auto;gap:18px;padding:20px 4px;border-bottom:1px solid var(--line);align-items:baseline}
+.mi .st{font-family:var(--mono);font-size:11px;letter-spacing:.15em}
+.mi .done{color:var(--accent)}
+.mi .wip{color:#b7791f}
+.mi .todo{color:var(--sub)}
+.mi b{font-size:16.5px;font-weight:800}
+.mi p{color:var(--sub);font-size:13.5px}
+@media(max-width:640px){.mi{grid-template-columns:1fr}}
+
+/* 页脚 */
+.cta-band{border-top:1.5px solid var(--ink);border-bottom:1px solid var(--line);margin-top:90px;padding:56px 0;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap}
+.cta-band h2{margin:0}
+.btn{font-family:var(--mono);font-size:14px;text-decoration:none;border:1.5px solid var(--ink);padding:14px 30px;display:inline-block;transition:.25s}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn.fill{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.fill:hover{filter:brightness(1.08);transform:translateY(-2px)}
+footer{padding:34px 0 70px;font-family:var(--mono);font-size:12px;color:var(--sub);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+footer a{color:var(--ink)}
+
+/* 动效 */
+.rv{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.rv.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}}
 </style>
 </head>
 <body>
-<div class="blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
-<div class="grain"></div>
 
-<nav class="glass">
-  <div class="logo"><span class="dot"></span>班牌输入法</div>
-  <div>
-    <a href="#features">特性</a><a href="#why">理念</a><a href="#roadmap">路线</a>
-    <a class="gh" href="https://github.com/Xuanyze/ime" target="_blank" rel="noopener">GitHub</a>
-  </div>
-</nav>
+<div class="top"><div class="wrap">
+  <div class="brand">班牌<i>输入法</i></div>
+  <nav>
+    <a href="#features">特性</a><a href="#shots">实机</a><a href="#why">理念</a><a href="#map">路线</a>
+    <a href="https://github.com/Xuanyze/ime" target="_blank" rel="noopener">GitHub ↗</a>
+  </nav>
+</div></div>
 
-<header>
-  <span class="badge glass">电子智能班牌专用 · 完全离线</span>
-  <h1>把输入法，<br>做回<span class="grad">一把趁手的工具</span></h1>
-  <p class="sub">基于 Rime 引擎与雾凇词库的二次开发：为横屏大屏、公共多人使用、性能有限的电子班牌，
-     重新设计的专用输入面板。三栏布局、大按键、Bar / HOME 一键逃生——简单、稳定、不折腾。</p>
-  <div class="cta">
-    <a class="btn primary" href="https://github.com/Xuanyze/ime/actions" target="_blank" rel="noopener">下载安装包</a>
-    <a class="btn ghost" href="#features">了解特性</a>
+<header class="wrap hero">
+  <div class="kicker rv">BOARD KEYBOARD · FOR CLASS DISPLAYS</div>
+  <h1 class="rv">班牌输入法<span class="thin">，<br>一把不做作的工具。</span></h1>
+  <p class="lead rv" style="max-width:560px">基于 Rime 引擎与雾凇词库二次开发，为横屏大屏、公共多人使用、性能有限的电子班牌重新设计的专用输入法。完全离线，数据不出设备。</p>
+  <div class="hero-meta rv">
+    <div class="hm"><b>v2026.08</b><span>VERSION / 分钟级构建</span></div>
+    <div class="hm"><b>60 MB</b><span>SIZE / 含全量词库</span></div>
+    <div class="hm"><b>8 — 13</b><span>ANDROID / 重点兼容 8 与 13</span></div>
+    <div class="hm"><b>Rime</b><span>CORE / 雾凇方案内核</span></div>
   </div>
-  <div class="stats">
-    <div class="stat glass"><b>60 MB</b><span>安装包体积</span></div>
-    <div class="stat glass"><b>0 联网</b><span>数据不出设备</span></div>
-    <div class="stat glass"><b>Android 8-13</b><span>兼容范围</span></div>
-    <div class="stat glass"><b>Rime</b><span>成熟输入内核</span></div>
-  </div>
-  <div class="scroll-hint">SCROLL ↓</div>
+  <figure class="hero-img rv">
+    <img src="assets/Screenshot_20260829_200746_com_tencent_mobileqq_S.jpg" alt="实机横屏键盘：左侧方案与数字、中间全拼、右侧编辑键">
+    <figcaption class="figcap"><span>FIG.01 — 实机运行：横屏三栏布局（方案+数字 / 主输入 / 编辑）</span><span>Android 13 · 平板真机</span></figcaption>
+  </figure>
 </header>
 
-<main>
+<div class="tick"><div class="tick-in">
+  完全离线<b>/</b>横屏三栏<b>/</b>雾凇词库<b>/</b>Bar 唤回导航栏<b>/</b>HOME 回桌面<b>/</b>无账号<b>/</b>无广告<b>/</b>每日词库自清理<b>/</b>大按键低误触<b>/</b>全拼 · 双拼 · 9键 · 手写<b>/</b>
+  完全离线<b>/</b>横屏三栏<b>/</b>雾凇词库<b>/</b>Bar 唤回导航栏<b>/</b>HOME 回桌面<b>/</b>无账号<b>/</b>无广告<b>/</b>每日词库自清理<b>/</b>大按键低误触<b>/</b>全拼 · 双拼 · 9键 · 手写<b>/</b>
+</div></div>
+
+<main class="wrap">
+
 <section id="features">
-  <div class="sec-tag reveal">FEATURES</div>
-  <h2 class="reveal">为班牌而做的每一处取舍</h2>
-  <p class="lead reveal">不追手机输入法的花哨，只解决班牌场景的真实问题：大屏横屏怎么布局、
-     公共设备怎么不越用越乱、消息程序霸占前台时怎么脱身。</p>
-  <div class="grid">
-    <div class="card glass reveal"><div class="ico">🧭</div><h3>Bar · 唤回导航栏</h3>
-      <p>系统导航栏被自动隐藏时，一键隐藏键盘并尽力唤回 Back / Home / Recent，不崩溃、不折腾。</p></div>
-    <div class="card glass reveal"><div class="ico">🏠</div><h3>HOME · 直回桌面</h3>
-      <p>消息程序反复抢占前台？HOME 键一键回到 Android 桌面，绝不强杀任何应用。</p></div>
-    <div class="card glass reveal"><div class="ico">🔲</div><h3>横屏三栏布局</h3>
-      <p>左侧方案切换与数字小键盘、中间主输入区、右侧方形编辑键——全为横屏大触控重新设计。</p></div>
-    <div class="card glass reveal"><div class="ico">✍️</div><h3>全拼 · 双拼 · 9键 · 手写</h3>
-      <p>四套方案一键切换，当前方案高亮；大按键、低误触，学生老师都好上手。</p></div>
-    <div class="card glass reveal"><div class="ico">📚</div><h3>雾凇词库内核</h3>
-      <p>输入内核迁移到开源雾凇拼音方案，词库持续维护，模糊音等能力按标准方式扩展。</p></div>
-    <div class="card glass reveal"><div class="ico">🛡️</div><h3>公共设备守则</h3>
-      <p>无账号、无广告、无上传、无自学习膨胀——每日自动清理用户词库，所有人体验一致。</p></div>
+  <div class="secnum rv">01 / FEATURES</div>
+  <h2 class="rv">每一条特性，<br>都来自班牌上的真实麻烦。</h2>
+  <p class="lead rv">不抄手机输入法的功能清单。班牌性能有限、常年横屏、导航栏会被系统藏起来、消息程序总抢前台——功能只解决这些问题。</p>
+  <div class="rows rv">
+    <div class="row"><span class="no">F-01</span><h3>Bar · 唤回导航栏</h3><p>系统把导航栏藏起来时，一键收起键盘并尽力唤回 Back / Home / Recent。ROM 不配合也不崩溃。</p></div>
+    <div class="row"><span class="no">F-02</span><h3>HOME · 直回桌面</h3><p>消息程序霸占前台时，一键回到 Android 桌面。不强杀、不驻留、不折腾任何应用。</p></div>
+    <div class="row"><span class="no">F-03</span><h3>横屏三栏布局</h3><p>左栏方案切换与数字小键盘、中间主输入区、右栏方形编辑键。按键间距与尺寸为触控重算，不为竖屏缩放。</p></div>
+    <div class="row"><span class="no">F-04</span><h3>全拼 · 双拼 · 9键 · 手写</h3><p>四套方案常驻左栏，当前方案高亮。双拼与 9 键沿用成熟引擎实现，不重新造轮子。</p></div>
+    <div class="row"><span class="no">F-05</span><h3>雾凇方案内核</h3><p>输入方案迁移至开源雾凇拼音，词库持续维护；模糊音等能力按 Rime 标准方式扩展。</p></div>
+    <div class="row"><span class="no">F-06</span><h3>公共设备守则</h3><p>无账号、无云同步、无输入上传。每日自动清理自学习词库，让第一千次使用和第一次一样可预测。</p></div>
   </div>
 </section>
 
-<section>
-  <div class="sec-tag reveal">LIVE PREVIEW</div>
-  <h2 class="reveal">三栏布局，一眼即懂</h2>
-  <p class="lead reveal">左侧选方案、打数字；中间安心打字；右侧方向键与编辑键触手可及。把鼠标放上来试试。</p>
-  <div class="kb-wrap glass reveal">
-    <div class="kb">
-      <div class="cand"><span class="py">nihao</span><span class="word">你好</span><span class="word hl">您好</span><span class="word">你号</span><span class="word">拟好</span><span class="word">妮好</span></div>
-      <div class="col">
-        <div class="k on">26键全拼</div><div class="k">双拼</div><div class="k">9键拼音</div><div class="k">手写</div>
-        <div class="k num">7</div><div class="k num">4</div><div class="k num">1</div><div class="k num">·</div>
-      </div>
-      <div class="col">
-        <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:6px;flex:1">
-          <div class="k">Q</div><div class="k">W</div><div class="k">E</div><div class="k">R</div><div class="k">T</div><div class="k">Y</div><div class="k">U</div><div class="k">I</div><div class="k">O</div><div class="k">P</div>
-          <div class="k">A</div><div class="k">S</div><div class="k">D</div><div class="k">F</div><div class="k">G</div><div class="k">H</div><div class="k">J</div><div class="k">K</div><div class="k">L</div><div class="k">⌫</div>
-          <div class="k" style="grid-column:span 2">分词</div><div class="k">Z</div><div class="k">X</div><div class="k">C</div><div class="k">V</div><div class="k">B</div><div class="k">N</div><div class="k">M</div><div class="k" style="grid-column:span 2">符号</div>
-          <div class="k" style="grid-column:span 2">123</div><div class="k" style="grid-column:span 5">空格</div><div class="k" style="grid-column:span 2">中/En</div><div class="k on">发送</div>
-        </div>
-      </div>
-      <div class="col right">
-        <div class="k">❯</div><div class="k">❯</div><div class="k">❯</div><div class="k">❯</div>
-        <div class="k">Home</div><div class="k">End</div><div class="k">全选</div><div class="k">复制</div><div class="k">粘贴</div><div class="k">Del</div>
-      </div>
-    </div>
+<section id="shots">
+  <div class="secnum rv">02 / ON DEVICE</div>
+  <h2 class="rv">实机，不渲染。</h2>
+  <p class="lead rv">以下全部为真机截图，未做任何修饰。左：平板分屏下的暗色主题；右：10 寸班牌横屏首版。</p>
+  <div class="shots">
+    <figure class="rv"><div class="shot"><img src="assets/Screenshot_20260829_192747_com_tencent_mm_Chattin.jpg" alt="微信分屏下的暗色主题键盘"></div>
+      <figcaption class="figcap"><span>FIG.02 — 暗色主题 · 微信分屏</span><span>Bar / HOME 常驻工具栏</span></figcaption></figure>
+    <figure class="rv"><div class="shot"><img src="assets/Screenshot_20260829_173106.jpg" alt="班牌横屏全拼键盘"></div>
+      <figcaption class="figcap"><span>FIG.03 — 班牌 · 全拼与数字行</span><span>Android 8 — 13</span></figcaption></figure>
   </div>
 </section>
 
 <section id="why">
-  <div class="sec-tag reveal">PHILOSOPHY</div>
-  <h2 class="reveal">能用 > 稳定 > 体验 > 美观 > 完美</h2>
-  <div class="story reveal">
-    <p>班牌挂在教室门口和走廊，<em>谁都会去碰一下</em>。它性能有限、常年横屏、导航栏会被系统悄悄藏起来，消息程序还总抢回前台。</p>
-    <p>所以这个输入法不堆功能：<em>每个按键都为触控放大</em>，每条数据都留在本地，
-       每天自动清理自学习词库，让第一千次使用和第一次一样可预测。</p>
-    <p>当消息程序把人困住时，<em>Bar</em> 把导航栏叫回来，<em>HOME</em> 直接回桌面——
-       两个按钮，不多不少，解决 80% 的实际困境。</p>
+  <div class="secnum rv">03 / WHY</div>
+  <h2 class="rv">设计原则只有一行。</h2>
+  <p class="mani rv">能用，大于稳定，大于体验，<span class="gap"></span>大于美观，大于完美。<span class="gap"></span>
+     所以它不追手机输入法的热闹：<em>按键为触控放大</em>，<em>数据留在本地</em>，<em>每天自动清理</em>自学习词库，
+     让第一千次使用和第一次一样可预测。</p>
+  <p class="note rv">// 消息程序把人困住时：Bar 把导航栏叫回来，HOME 直接回桌面。两个按钮，不多不少。</p>
+</section>
+
+<section id="map">
+  <div class="secnum rv">04 / ROADMAP</div>
+  <h2 class="rv">正在生长。</h2>
+  <div class="map rv">
+    <div class="mi"><span class="st done">SHIPPED</span><div><b>Bar / HOME · 三栏布局 · 签名 Release</b><p>CI 自动构建，分钟级版本号，覆盖安装平滑升级</p></div><span class="st done">✓</span></div>
+    <div class="mi"><span class="st done">SHIPPED</span><div><b>雾凇拼音方案接入</b><p>全拼方案与词库迁移至开源雾凇方案</p></div><span class="st done">✓</span></div>
+    <div class="mi"><span class="st wip">IN WORK</span><div><b>模糊音设置</b><p>zh/z、n/l、an/ang 等常见组合，设置内自由开关</p></div><span class="st wip">…</span></div>
+    <div class="mi"><span class="st todo">PLANNED</span><div><b>更多机型适配</b><p>不同分辨率与比例的班牌逐台验证</p></div><span class="st todo">·</span></div>
   </div>
 </section>
 
-<section id="roadmap">
-  <div class="sec-tag reveal">ROADMAP</div>
-  <h2 class="reveal">正在生长</h2>
-  <div class="timeline">
-    <div class="tl done glass" style="padding:16px 20px;border-radius:14px;margin-bottom:12px"><b>Bar / HOME 逃生按钮 · 三栏横屏布局 · 签名 Release 构建</b><span>已上线，CI 自动出包</span></div>
-    <div class="tl done glass" style="padding:16px 20px;border-radius:14px;margin-bottom:12px"><b>雾凇拼音方案接入</b><span>输入内核迁移至开源雾凇方案，词库持续跟进</span></div>
-    <div class="tl todo glass" style="padding:16px 20px;border-radius:14px;margin-bottom:12px"><b>模糊音设置</b><span>zh/z、n/l、an/ang 等常见组合，设置内自由开关</span></div>
-    <div class="tl todo glass" style="padding:16px 20px;border-radius:14px;margin-bottom:12px"><b>更多机型适配</b><span>不同分辨率与比例的班牌逐台验证打磨</span></div>
-  </div>
-</section>
 </main>
 
-<footer>
-  <div>班牌输入法 · 基于 <a href="https://github.com/gurecn/YuyanIme" target="_blank" rel="noopener">YuyanIme</a> 与
-    <a href="https://github.com/iDvel/rime-ice" target="_blank" rel="noopener">雾凇拼音</a> 二次开发 · Rime 引擎</div>
-  <div><a href="https://github.com/Xuanyze/ime" target="_blank" rel="noopener">GitHub 仓库</a> · 本页由 AI 协助构建</div>
+<div class="wrap"><div class="cta-band">
+  <h2>给你的班牌<br>装一把趁手的键盘。</h2>
+  <div style="display:flex;gap:14px;flex-wrap:wrap">
+    <a class="btn fill" href="https://github.com/Xuanyze/ime/actions" target="_blank" rel="noopener">下载安装包 →</a>
+    <a class="btn" href="https://github.com/Xuanyze/ime" target="_blank" rel="noopener">查看源码</a>
+  </div>
+</div></div>
+
+<footer class="wrap">
+  <div>班牌输入法 — 基于 <a href="https://github.com/gurecn/YuyanIme" target="_blank" rel="noopener">YuyanIme</a> 与
+  <a href="https://github.com/iDvel/rime-ice" target="_blank" rel="noopener">雾凇拼音</a> 二次开发 · Rime 引擎 · 完全离线</div>
+  <div>BUILT WITH ZCODE · FIG.01–03 真机截图</div>
 </footer>
 
 <script>
-// 滚动入场
-const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
-document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
-// 卡片流光跟随鼠标
-document.querySelectorAll('.card').forEach(c=>c.addEventListener('pointermove',e=>{
-  const r=c.getBoundingClientRect();
-  c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px');
-}));
-// 键帽涟漪
-document.querySelectorAll('.k').forEach(k=>k.addEventListener('pointerdown',()=>{
-  k.style.transform='translateY(2px) scale(.97)';setTimeout(()=>k.style.transform='',160);
-}));
-// 导航随滚动加深
-const nav=document.querySelector('nav');
-addEventListener('scroll',()=>{nav.style.background=getScrollY()>40?'rgba(10,14,26,.55)':'var(--glass)'},{passive:true});
-function getScrollY(){return scrollY}
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.1});
+document.querySelectorAll('.rv').forEach(el=>io.observe(el));
 </script>
 </body>
 </html>
