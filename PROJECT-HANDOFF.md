@@ -79,6 +79,7 @@
 
 ### 下一步
 
-1. 等 commit 70a73b1 的 CI 结果（三栏布局代码第一次编译）。
-2. 用户真机验证：装 APK → 26键/9键/双拼输入、候选词、Bar/HOME 实际效果、两侧面板布局是否美观、数字键 Ctrl 组合在目标消息 App 是否生效。
-3. 待办：按真机反馈微调面板比例/配色；Android 8 真机回归；评估是否调大横屏键盘占比（EnvironmentSingleton 的 0.7 系数）；更新应用名（仍是语燕默认名/包名，未改）。
+1. **用户真机验证**：从 GitHub Actions（commit `665edae`，CI 绿）下载 `app-debug-apk` artifact 装机。验证清单：26键/9键/双拼输入与候选词、上屏、删除、空格、Enter；横屏两侧面板布局与美观度；数字键/符号/Ctrl 组合在目标消息 App 里的实际效果；Bar 能否唤回导航栏、HOME 能否回桌面（ROM 相关，需实测）；Android 8 回归。
+2. 按真机反馈微调：面板比例/配色/按键大小；必要时调 EnvironmentSingleton 横屏 0.7 宽度系数给面板让空间。
+3. 备选改进：Ctrl+C/X/V 若目标 App 对 KeyEvent 组合不响应，改走 ClipboardManager 直读直写；Bar 若唤不回导航栏，记录 ROM 限制（规范允许降级）。
+4. 应用名/包名仍是语燕默认（com.yuyan.pinyin），待用户确定后修改。
