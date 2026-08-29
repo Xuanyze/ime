@@ -55,10 +55,15 @@ h2{font-size:clamp(26px,4vw,40px);font-weight:900;margin:12px 0 30px}
 footer{padding:44px 0 64px;font-family:var(--mono);font-size:12px;color:var(--sub);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
 footer a{color:var(--acc)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+.shots{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;margin-top:10px}
+.shot{border:1px solid var(--line);overflow:hidden;background:#eef1f0}
+.shot img{display:block;width:100%;height:100%;object-fit:cover}
+.fig{font-family:var(--mono);font-size:11.5px;color:var(--sub);padding:8px 2px 0}
+@media(max-width:780px){.shots{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<nav><div class="wrap"><b>班牌<i>输入法</i></b><div class="links"><a href="#demo">演示</a><a href="#feat">特性</a><a href="#why">原则</a><a href="https://github.com/Xuanyze/ime" target="_blank" rel="noopener">GitHub ↗</a></div></div></nav>
+<nav><div class="wrap"><b>班牌<i>输入法</i></b><div class="links"><a href="#demo">演示</a><a href="#shots">实机</a><a href="#feat">特性</a><a href="#why">原则</a><a href="https://github.com/Xuanyze/ime" target="_blank" rel="noopener">GitHub ↗</a></div></div></nav>
 
 <div class="wrap hero">
   <div class="tag">BOARD KEYBOARD · OFFLINE · LANDSCAPE FIRST</div>
@@ -85,6 +90,15 @@ footer a{color:var(--acc)}
       <div class="k">符号 · 123 · 空格 · 中/En · 发送</div>
     </div>
     <div class="col"><div class="k">↑</div><div class="k">↓</div><div class="k">← →</div><div class="k">Home</div><div class="k">全选 · 复制</div><div class="k">剪切 · 粘贴</div></div>
+  </div>
+</div>
+
+<div class="wrap sec" id="shots">
+  <div class="no">00 / ON DEVICE</div>
+  <h2>实机，不渲染。</h2>
+  <div class="shots">
+    <figure><div class="shot"><img src="assets/board_full.jpg" alt="横屏三栏：左方案与数字、中全拼、右编辑键"></div><div class="fig">FIG.01 — 全拼三栏布局 · 浏览器地址栏场景</div></figure>
+    <figure><div class="shot"><img src="assets/board_handwriting.jpg" alt="手写输入“纯粹”与候选联想"></div><div class="fig">FIG.02 — 手写输入 · 大画布与候选联想</div></figure>
   </div>
 </div>
 
