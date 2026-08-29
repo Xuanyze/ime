@@ -54,7 +54,7 @@ class SchemeRail(context: Context, private val inputView: InputView) : LinearLay
         orientation = VERTICAL
         setPadding(dp(4), dp(4), dp(4), dp(4))
         titleViews = options.map { option ->
-            boardPanelButton(context, option.title, EnvironmentSingleton.instance.keyTextSize) { switchTo(option) }
+            boardPanelButton(option.title, EnvironmentSingleton.instance.keyTextSize) { switchTo(option) }
         }
         titleViews.forEach { addView(it, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)) }
         refresh()
@@ -98,22 +98,22 @@ class FunctionColumn(context: Context, private val inputView: InputView) : Linea
 
         val numberPad = LinearLayout(context).apply {
             orientation = VERTICAL
-            addView(row(boardPanelButton(context, "7", textSize) { inputView.panelCommitText("7") }, boardPanelButton(context, "8", textSize) { inputView.panelCommitText("8") }, boardPanelButton(context, "9", textSize) { inputView.panelCommitText("9") }))
-            addView(row(boardPanelButton(context, "4", textSize) { inputView.panelCommitText("4") }, boardPanelButton(context, "5", textSize) { inputView.panelCommitText("5") }, boardPanelButton(context, "6", textSize) { inputView.panelCommitText("6") }))
-            addView(row(boardPanelButton(context, "1", textSize) { inputView.panelCommitText("1") }, boardPanelButton(context, "2", textSize) { inputView.panelCommitText("2") }, boardPanelButton(context, "3", textSize) { inputView.panelCommitText("3") }))
-            addView(row(boardPanelButton(context, ".", textSize) { inputView.panelCommitText(".") }, boardPanelButton(context, "0", textSize) { inputView.panelCommitText("0") }, boardPanelButton(context, "⌫", textSize) { inputView.panelBackspace() }))
-            addView(row(boardPanelButton(context, "，", textSize) { inputView.panelCommitText("，") }, boardPanelButton(context, "。", textSize) { inputView.panelCommitText("。") }, boardPanelButton(context, "？", textSize) { inputView.panelCommitText("？") }))
-            addView(row(boardPanelButton(context, "！", textSize) { inputView.panelCommitText("！") }, boardPanelButton(context, "：", textSize) { inputView.panelCommitText("：") }, boardPanelButton(context, "、", textSize) { inputView.panelCommitText("、") }))
+            addView(row(boardPanelButton("7", textSize) { inputView.panelCommitText("7") }, boardPanelButton("8", textSize) { inputView.panelCommitText("8") }, boardPanelButton("9", textSize) { inputView.panelCommitText("9") }))
+            addView(row(boardPanelButton("4", textSize) { inputView.panelCommitText("4") }, boardPanelButton("5", textSize) { inputView.panelCommitText("5") }, boardPanelButton("6", textSize) { inputView.panelCommitText("6") }))
+            addView(row(boardPanelButton("1", textSize) { inputView.panelCommitText("1") }, boardPanelButton("2", textSize) { inputView.panelCommitText("2") }, boardPanelButton("3", textSize) { inputView.panelCommitText("3") }))
+            addView(row(boardPanelButton(".", textSize) { inputView.panelCommitText(".") }, boardPanelButton("0", textSize) { inputView.panelCommitText("0") }, boardPanelButton("⌫", textSize) { inputView.panelBackspace() }))
+            addView(row(boardPanelButton("，", textSize) { inputView.panelCommitText("，") }, boardPanelButton("。", textSize) { inputView.panelCommitText("。") }, boardPanelButton("？", textSize) { inputView.panelCommitText("？") }))
+            addView(row(boardPanelButton("！", textSize) { inputView.panelCommitText("！") }, boardPanelButton("：", textSize) { inputView.panelCommitText("：") }, boardPanelButton("、", textSize) { inputView.panelCommitText("、") }))
         }
 
         val editPad = LinearLayout(context).apply {
             orientation = VERTICAL
-            addView(row(boardPanelButton(context, "↑", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_UP) }, boardPanelButton(context, "↓", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_DOWN) }))
-            addView(row(boardPanelButton(context, "←", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_LEFT) }, boardPanelButton(context, "→", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_RIGHT) }))
-            addView(row(boardPanelButton(context, "Home", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_MOVE_START) }, boardPanelButton(context, "End", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_MOVE_END) }))
-            addView(row(boardPanelButton(context, "Del", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_FORWARD_DEL) }, boardPanelButton(context, "⌫", textSize) { inputView.panelBackspace() }))
-            addView(row(boardPanelButton(context, "Ctrl+A", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_SELECT_ALL) }, boardPanelButton(context, "Ctrl+C", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_COPY) }))
-            addView(row(boardPanelButton(context, "Ctrl+X", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_CUT) }, boardPanelButton(context, "Ctrl+V", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_PASTE) }))
+            addView(row(boardPanelButton("↑", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_UP) }, boardPanelButton("↓", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_DOWN) }))
+            addView(row(boardPanelButton("←", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_LEFT) }, boardPanelButton("→", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_RIGHT) }))
+            addView(row(boardPanelButton("Home", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_MOVE_START) }, boardPanelButton("End", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_MOVE_END) }))
+            addView(row(boardPanelButton("Del", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_FORWARD_DEL) }, boardPanelButton("⌫", textSize) { inputView.panelBackspace() }))
+            addView(row(boardPanelButton("Ctrl+A", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_SELECT_ALL) }, boardPanelButton("Ctrl+C", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_COPY) }))
+            addView(row(boardPanelButton("Ctrl+X", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_CUT) }, boardPanelButton("Ctrl+V", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_PASTE) }))
         }
 
         addView(numberPad, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1.2f))
@@ -122,8 +122,8 @@ class FunctionColumn(context: Context, private val inputView: InputView) : Linea
 }
 
 /** 班牌侧栏按钮：中性圆角、主题配色、明显按压反馈 */
-private fun boardPanelButton(context: Context, label: String, textSizePx: Int, onClick: () -> Unit): TextView {
-    val view = TextView(context)
+private fun Context.boardPanelButton(label: String, textSizePx: Int, onClick: () -> Unit): TextView {
+    val view = TextView(this)
     view.gravity = Gravity.CENTER
     view.text = label
     view.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSizePx.toFloat())
