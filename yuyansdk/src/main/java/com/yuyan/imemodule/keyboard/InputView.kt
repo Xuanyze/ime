@@ -207,7 +207,9 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
      */
     private fun updateBoardPanels(context: Context) {
         val env = EnvironmentSingleton.instance
-        val enabled = env.isLandscape && !env.keyboardModeFloat && env.leftMarginWidth >= dp(150)
+        val enabled = env.isLandscape && !env.keyboardModeFloat && env.leftMarginWidth >= dp(120)
+        LogUtil.d("BoardPanels", "updateBoardPanels enabled=$enabled landscape=${env.isLandscape} " +
+                "float=${env.keyboardModeFloat} margin=${env.leftMarginWidth} skbW=${env.skbWidth} skbH=${env.skbHeight}")
         if (enabled) {
             val rail = SchemeRail(context, this)
             val column = FunctionColumn(context, this)
