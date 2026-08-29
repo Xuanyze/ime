@@ -72,6 +72,7 @@ open class BaseContainer(@JvmField var mContext: Context, @JvmField protected va
 
     private val lastY = floatArrayOf(0f)
     var isHandling = false
+    private var lastRebuildTime = 0L
     private fun onModifyKeyboardHeightEvent(v12: View, event: MotionEvent): Boolean {
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> lastY[0] = event.y
@@ -88,20 +89,33 @@ open class BaseContainer(@JvmField var mContext: Context, @JvmField protected va
                     lastY[0] = y
                     EnvironmentSingleton.instance.keyBoardHeightRatio = rat
                     EnvironmentSingleton.instance.initData()
-                    KeyboardLoaderUtil.instance.clearKeyboardMap()
-                    KeyboardManager.instance.clearKeyboard()
-                    updateSkbLayout()
-                    val l = LayoutParams(
-                        LayoutParams.MATCH_PARENT,
-                        EnvironmentSingleton.instance.skbHeight
-                    )
-                    rootView.setLayoutParams(l)
                     isHandling = false
+                    // 清缓存重建键盘位图是重活，拖动时节流 150ms 一次，收手必定重建，
+                    // 否则每个拖动刻度都全量重建会明显卡顿
+                    val now = System.currentTimeMillis()
+                    if (now - lastRebuildTime > 150) {
+                        lastRebuildTime = now
+                        rebuildKeyboardAfterHeightChange()
+                    }
                 }
             }
-            MotionEvent.ACTION_UP -> v12.performClick()
+            MotionEvent.ACTION_UP -> {
+                v12.performClick()
+                rebuildKeyboardAfterHeightChange()
+            }
         }
         return true
+    }
+
+    private fun rebuildKeyboardAfterHeightChange() {
+        KeyboardLoaderUtil.instance.clearKeyboardMap()
+        KeyboardManager.instance.clearKeyboard()
+        updateSkbLayout()
+        val l = LayoutParams(
+            LayoutParams.MATCH_PARENT,
+            EnvironmentSingleton.instance.skbHeight
+        )
+        rootView.setLayoutParams(l)
     }
 
     private var initialTouchX = 0f
