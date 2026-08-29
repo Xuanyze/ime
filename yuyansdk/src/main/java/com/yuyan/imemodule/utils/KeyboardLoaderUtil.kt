@@ -31,8 +31,11 @@ class KeyboardLoaderUtil private constructor() {
     private var mSkbValue: Int = 0
     private var numberLine: Boolean = false
     private var skbStyleMode: SkbStyleMode = SkbStyleMode.Yuyan
+    private val mSkbSizeMap = HashMap<Int, Pair<Int, Int>>() //键盘构建时的skb尺寸；尺寸变化时弃用缓存重建，防止按键几何过期
+
     fun clearKeyboardMap() {
         mSoftKeyboardMap.clear()
+        mSkbSizeMap.clear()
     }
 
     private fun loadBaseSkb(skbValue: Int): SoftKeyboard {
@@ -304,6 +307,7 @@ class KeyboardLoaderUtil private constructor() {
         }
         softKeyboard = getSoftKeyboard(rows, numberLineSkb)
         mSoftKeyboardMap[skbValue] = softKeyboard
+        mSkbSizeMap[skbValue] = Pair(EnvironmentSingleton.instance.skbWidth, EnvironmentSingleton.instance.skbHeight)
         return softKeyboard
     }
 
@@ -433,7 +437,10 @@ class KeyboardLoaderUtil private constructor() {
 
     fun getSoftKeyboard(skbValue: Int): SoftKeyboard {
         var softKeyboard = mSoftKeyboardMap[skbValue]
-        if (softKeyboard == null) {
+        val builtSize = mSkbSizeMap[skbValue]
+        if (softKeyboard == null || builtSize == null ||
+            builtSize.first != EnvironmentSingleton.instance.skbWidth ||
+            builtSize.second != EnvironmentSingleton.instance.skbHeight) {
             softKeyboard = loadBaseSkb(skbValue)
         }
         return softKeyboard

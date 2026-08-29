@@ -121,12 +121,18 @@ class FunctionColumn(context: Context, private val inputView: InputView) : Linea
     }
 }
 
-/** 班牌侧栏按钮：中性圆角、主题配色、明显按压反馈 */
+/** 班牌侧栏按钮：中性圆角、主题配色、明显按压反馈；长标签自动缩小字号且不折行 */
 private fun View.boardPanelButton(label: String, textSizePx: Int, onClick: () -> Unit): TextView {
     val view = TextView(context)
     view.gravity = Gravity.CENTER
     view.text = label
-    view.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSizePx.toFloat())
+    view.maxLines = 1
+    val fittedSize = when {
+        label.length <= 2 -> textSizePx
+        label.length <= 4 -> (textSizePx * 0.72f).toInt()
+        else -> (textSizePx * 0.58f).toInt()
+    }
+    view.setTextSize(TypedValue.COMPLEX_UNIT_PX, fittedSize.toFloat())
     view.setTextColor(ThemeManager.activeTheme.keyTextColor)
     view.background = GradientDrawable().apply {
         cornerRadius = dp(8).toFloat()

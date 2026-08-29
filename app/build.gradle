@@ -10,8 +10,8 @@ android {
         applicationId "com.yuyan.pinyin"
         minSdk 23
         targetSdk 36
-        versionCode Integer.valueOf(versionCodeDate())
-        versionName versionNameDate() + "-board"
+        versionCode versionCodeMinutes()
+        versionName versionNameFull() + "-board"
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         ndk {
@@ -109,6 +109,15 @@ static def versionCodeDate() {
 
 static def versionNameDate() {
     return new Date().format("yyyyMMdd.HH", TimeZone.getTimeZone("GMT+8"))
+}
+
+// 分钟级 versionCode：同一小时内重复构建也能正常覆盖安装（小时级曾导致同 versionCode 覆盖安装静默失败）
+static def versionCodeMinutes() {
+    return (System.currentTimeMillis() / 60000L).intValue()
+}
+
+static def versionNameFull() {
+    return new Date().format("yyyyMMdd.HHmm", TimeZone.getTimeZone("GMT+8"))
 }
 
 dependencies {

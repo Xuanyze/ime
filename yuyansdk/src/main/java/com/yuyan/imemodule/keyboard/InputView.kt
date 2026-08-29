@@ -582,6 +582,10 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
 
     fun updateCandidateBar() {
         mSkbCandidatesBarView.scheduleShowCandidates()
+        // 班牌侧栏只在输入键盘上显示；设置/符号/剪贴板等全宽容器会被遮挡
+        val inputKeyboard = KeyboardManager.instance.isInputKeyboard
+        mSchemeRail?.visibility = if (inputKeyboard) VISIBLE else GONE
+        mFunctionColumn?.visibility = if (inputKeyboard) VISIBLE else GONE
         mSchemeRail?.runCatching { refresh() }
     }
 
