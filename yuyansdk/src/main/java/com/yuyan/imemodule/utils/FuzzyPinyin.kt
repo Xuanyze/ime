@@ -45,12 +45,8 @@ object FuzzyPinyin {
             if (rules.isEmpty()) {
                 patch.delete()
             } else {
-                val body = rules.joinToString("
-") { "    - $it" }
-                patch.writeText("patch:
-  speller/algebra/@next:
-$body
-")
+                val body = rules.joinToString("\n") { "    - $it" }
+                patch.writeText("patch:\n  speller/algebra/@next:\n" + body + "\n")
             }
             Kernel.resetIme()
         }
