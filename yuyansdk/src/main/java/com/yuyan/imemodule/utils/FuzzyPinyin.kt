@@ -2,7 +2,10 @@ package com.yuyan.imemodule.utils
 
 import android.content.Context
 import com.yuyan.imemodule.application.CustomConstant
+import com.yuyan.imemodule.inputmethod.RimeEngine
+import com.yuyan.imemodule.prefs.AppPrefs
 import com.yuyan.inputmethod.core.Kernel
+import com.yuyan.inputmethod.core.Rime
 import java.io.File
 
 /**
@@ -65,7 +68,11 @@ object FuzzyPinyin {
             DOUBLE_SCHEMAS.forEach { id ->
                 writePatch(File(dir, "$id.custom.yaml"), yamlPatch(dpRules))
             }
-            Kernel.resetIme()
+            // resetIme() 默认 fullCheck=false 不会重部署，custom patch 不会被编译；
+            // 这里走 fullCheck=true 触发完整部署后再切回当前方案
+            RimeEngine.destroy()
+            Rime.getInstance(fullCheck = true)
+            Kernel.initImeSchema(AppPrefs.getInstance().internal.pinyinModeRime.getValue())
         }
     }
 
