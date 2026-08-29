@@ -21,6 +21,7 @@ import com.yuyan.imemodule.singleton.EnvironmentSingleton
 import com.yuyan.imemodule.utils.DevicesUtils
 import com.yuyan.inputmethod.core.Kernel
 import splitties.dimensions.dp
+import splitties.views.dsl.core.margin
 
 /**
  * 班牌横屏三栏布局的左栏：输入方案选择 + 数字小键盘。
