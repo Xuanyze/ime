@@ -126,8 +126,9 @@ class BoardRightPanel(context: Context, private val inputView: InputView) : Line
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
         }
 
-        addView(row(boardPanelButton("↑", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_UP) }, boardPanelButton("↓", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_DOWN) }))
-        addView(row(boardPanelButton("←", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_LEFT) }, boardPanelButton("→", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_RIGHT) }))
+        // 方向键用 chevron 箭头（❯ 旋转四个方向），观感与 >< 一致
+        addView(row(boardPanelButton("❯", textSize, -90f) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_UP) }, boardPanelButton("❯", textSize, 90f) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_DOWN) }))
+        addView(row(boardPanelButton("❯", textSize, 180f) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_LEFT) }, boardPanelButton("❯", textSize, 0f) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_RIGHT) }))
         addView(row(boardPanelButton("Home", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_MOVE_START) }, boardPanelButton("End", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_MOVE_END) }))
         addView(row(boardPanelButton("全选", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_SELECT_ALL) }, boardPanelButton("复制", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_COPY) }))
         addView(row(boardPanelButton("剪切", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_CUT) }, boardPanelButton("粘贴", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_PASTE) }))
@@ -139,11 +140,12 @@ class BoardRightPanel(context: Context, private val inputView: InputView) : Line
  * 班牌侧栏按键：素色圆角（无边框），颜色取自当前主题适配深色模式。
  * 长标签自动缩小字号且不折行。
  */
-private fun View.boardPanelButton(label: String, textSizePx: Int, onClick: () -> Unit): TextView {
+private fun View.boardPanelButton(label: String, textSizePx: Int, rotationDeg: Float = 0f, onClick: () -> Unit): TextView {
     val view = TextView(context)
     view.gravity = Gravity.CENTER
     view.text = label
     view.maxLines = 1
+    view.rotation = rotationDeg
     val fittedSize = when {
         label.length <= 2 -> textSizePx
         label.length <= 4 -> (textSizePx * 0.78f).toInt()
