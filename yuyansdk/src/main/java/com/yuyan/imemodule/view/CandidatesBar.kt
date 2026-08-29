@@ -222,7 +222,8 @@ class CandidatesBar(context: Context?, attrs: AttributeSet?) : RelativeLayout(co
                 LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
             )
         }
-        var menuHeight = (instance.heightForCandidatesArea * 0.8).toInt()
+        // 工具栏高度随键盘高度联动（缩短键盘时工具栏同步变矮），并设置上限避免过高
+        var menuHeight = minOf((instance.heightForCandidatesArea * 0.8).toInt(), (instance.skbHeight * 0.22f).toInt())
         mFlowerType.textSize = instance.candidateTextSize
         mIvMenuSetting.layoutParams = LinearLayout.LayoutParams(menuHeight, menuHeight, 0f).apply { marginStart = dp(10) }
         mMenuRightArrowBtn.layoutParams = LinearLayout.LayoutParams(menuHeight, menuHeight, 0f).apply { marginEnd = dp(10) }

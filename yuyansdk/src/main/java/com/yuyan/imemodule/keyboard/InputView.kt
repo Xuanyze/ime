@@ -91,6 +91,8 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
     private var mFullDisplayKeyboardBar: FullDisplayKeyboardBar? = null
     private var mLeftPanel: BoardLeftPanel? = null
     private var mRightPanel: BoardRightPanel? = null
+    private var mPanelLeftW = 0
+    private var mPanelRightW = 0
     var hasSelection = false
     var hasSelectionAll = false
     // 记录删除内容
@@ -212,11 +214,19 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
         LogUtil.d("BoardPanels", "updateBoardPanels enabled=$enabled landscape=${env.isLandscape} " +
                 "float=${env.keyboardModeFloat} free=$free skbW=${env.skbWidth} skbH=${env.skbHeight} screen=${env.mScreenWidth}x${env.mScreenHeight}")
         val skbView = mSkbRoot.findViewById<View>(R.id.skb_input_keyboard_view)
+        // 面板宽度只随屏宽变化，不随键盘高度变化：
+        // 高度拖动时面板尺寸稳定，不重建、主键盘不横移（也避免逐帧重布局卡顿）
+        val rightW = (free * 0.26f).toInt()
+        val leftW = free - rightW
+        if (enabled && mLeftPanel != null && mRightPanel != null && mPanelLeftW == leftW && mPanelRightW == rightW) {
+            mSkbCandidatesBarView.boardFullWidth = true
+            return
+        }
+        mPanelLeftW = leftW
+        mPanelRightW = rightW
         if (enabled) {
             // 班牌横屏：左栏（方案+数字）+ 主键盘 + 右栏（编辑）。
-            // 主键盘不居中，跟在左栏之后；右栏宽度按方形键（2 列）计算
-            val rightW = env.skbHeight / 6 * 2 + dp(12)
-            val leftW = free - rightW
+            // 主键盘不居中，跟在左栏之后；右栏为方形编辑键区
             val rail = BoardLeftPanel(context, this).apply { id = View.generateViewId() }
             val column = BoardRightPanel(context, this)
             mLeftPanel?.let { mInputKeyboardContainer.removeView(it) }
@@ -248,6 +258,8 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
                         "skbView=(${skbView.x},${skbView.width}) left=(${rail.x},${rail.width}) right=(${column.x},${column.width})")
             }
         } else {
+            mPanelLeftW = 0
+            mPanelRightW = 0
             mLeftPanel?.let { mInputKeyboardContainer.removeView(it) }
             mRightPanel?.let { mInputKeyboardContainer.removeView(it) }
             mLeftPanel = null

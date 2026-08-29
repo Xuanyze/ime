@@ -58,7 +58,7 @@ class BoardLeftPanel(context: Context, private val inputView: InputView) : Linea
         orientation = HORIZONTAL
         setPadding(dp(4), dp(4), dp(4), dp(4))
         val env = EnvironmentSingleton.instance
-        val schemeSize = (env.keyTextSize * 0.8f).toInt()
+        val schemeSize = env.keyTextSize
 
         val schemeButtons = options.map { option ->
             boardPanelButton(option.title, schemeSize) { switchTo(option) }
@@ -67,12 +67,12 @@ class BoardLeftPanel(context: Context, private val inputView: InputView) : Linea
 
         val schemesCol = LinearLayout(context).apply { orientation = VERTICAL }
         schemeButtons.forEach { view ->
-            schemesCol.addView(view, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
+            schemesCol.addView(view, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f).apply { margin = dp(5) })
         }
 
         fun numberRow(vararg buttons: View): LinearLayout = LinearLayout(context).apply {
             orientation = HORIZONTAL
-            buttons.forEach { addView(it, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)) }
+            buttons.forEach { addView(it, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { margin = dp(5) }) }
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
         }
 
@@ -121,7 +121,7 @@ class BoardRightPanel(context: Context, private val inputView: InputView) : Line
 
         fun row(vararg buttons: View): LinearLayout = LinearLayout(context).apply {
             orientation = HORIZONTAL
-            buttons.forEach { addView(it, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)) }
+            buttons.forEach { addView(it, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f).apply { margin = dp(5) }) }
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f)
         }
 
@@ -145,8 +145,8 @@ private fun View.boardPanelButton(label: String, textSizePx: Int, onClick: () ->
     view.maxLines = 1
     val fittedSize = when {
         label.length <= 2 -> textSizePx
-        label.length <= 4 -> (textSizePx * 0.72f).toInt()
-        else -> (textSizePx * 0.58f).toInt()
+        label.length <= 4 -> (textSizePx * 0.78f).toInt()
+        else -> (textSizePx * 0.7f).toInt()
     }
     view.setTextSize(TypedValue.COMPLEX_UNIT_PX, fittedSize.toFloat())
     view.setTextColor(ThemeManager.activeTheme.keyTextColor)
