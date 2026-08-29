@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# 兜底：容器由旧配置创建时可能没有这个环境变量
+export ANDROID_HOME="${ANDROID_HOME:-/opt/android-sdk}"
+export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+sudo mkdir -p "$ANDROID_HOME" && sudo chown "$(whoami)" "$ANDROID_HOME"
+
 # 1) 安装 Android SDK 命令行工具（已装过则跳过，重建容器时省时间）
 if [ ! -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
   echo "==> Installing Android cmdline-tools..."
