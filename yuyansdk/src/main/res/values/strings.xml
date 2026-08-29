@@ -212,6 +212,7 @@
     <string name="board_scheme_qwerty">26键全拼</string>
     <string name="board_scheme_double">双拼</string>
     <string name="board_scheme_t9">9键拼音</string>
+    <string name="board_scheme_hand">手写</string>
     <string name="export_user_data">导出用户数据</string>
     <string name="import_user_data">导入用户数据</string>
     <string name="app_log">日志</string>

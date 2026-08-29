@@ -207,44 +207,61 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
      */
     private fun updateBoardPanels(context: Context) {
         val env = EnvironmentSingleton.instance
-        val enabled = env.isLandscape && !env.keyboardModeFloat && env.leftMarginWidth >= dp(120)
+        val free = env.mScreenWidth - env.skbWidth
+        val enabled = env.isLandscape && !env.keyboardModeFloat && free >= dp(420)
         LogUtil.d("BoardPanels", "updateBoardPanels enabled=$enabled landscape=${env.isLandscape} " +
-                "float=${env.keyboardModeFloat} margin=${env.leftMarginWidth} skbW=${env.skbWidth} skbH=${env.skbHeight} screen=${env.mScreenWidth}x${env.mScreenHeight}")
+                "float=${env.keyboardModeFloat} free=$free skbW=${env.skbWidth} skbH=${env.skbHeight} screen=${env.mScreenWidth}x${env.mScreenHeight}")
+        val skbView = mSkbRoot.findViewById<View>(R.id.skb_input_keyboard_view)
         if (enabled) {
-            // 键盘主区强制水平居中（ RelativeLayout gravity 在部分 ROM 上不生效，显式加规则兜底）
-            val skbView = mSkbRoot.findViewById<View>(R.id.skb_input_keyboard_view)
-            (skbView.layoutParams as? RelativeLayout.LayoutParams)?.apply {
-                addRule(CENTER_HORIZONTAL, RelativeLayout.TRUE)
-            }?.let { skbView.layoutParams = it }
-            val rail = BoardLeftPanel(context, this)
+            // 班牌横屏：左栏（方案+数字）+ 主键盘 + 右栏（编辑）。
+            // 主键盘不居中，跟在左栏之后；右栏宽度按方形键（2 列）计算
+            val rightW = env.skbHeight / 6 * 2 + dp(12)
+            val leftW = free - rightW
+            val rail = BoardLeftPanel(context, this).apply { id = View.generateViewId() }
             val column = BoardRightPanel(context, this)
             mLeftPanel?.let { mInputKeyboardContainer.removeView(it) }
             mRightPanel?.let { mInputKeyboardContainer.removeView(it) }
             mLeftPanel = rail
             mRightPanel = column
-            val keyboardViewId = mSkbRoot.findViewById<View>(R.id.skb_input_keyboard_view).id
-            rail.layoutParams = LayoutParams(env.leftMarginWidth, env.skbHeight).apply {
+            val keyboardViewId = skbView.id
+            rail.layoutParams = LayoutParams(leftW, env.skbHeight).apply {
                 addRule(ALIGN_PARENT_START)
                 addRule(ALIGN_TOP, keyboardViewId)
                 addRule(ALIGN_BOTTOM, keyboardViewId)
             }
-            column.layoutParams = LayoutParams(env.leftMarginWidth, env.skbHeight).apply {
+            column.layoutParams = LayoutParams(rightW, env.skbHeight).apply {
                 addRule(ALIGN_PARENT_END)
                 addRule(ALIGN_TOP, keyboardViewId)
                 addRule(ALIGN_BOTTOM, keyboardViewId)
             }
             mInputKeyboardContainer.addView(rail, 0)
             mInputKeyboardContainer.addView(column)
+            (skbView.layoutParams as? RelativeLayout.LayoutParams)?.apply {
+                addRule(CENTER_HORIZONTAL, 0)
+                addRule(END_OF, rail.id)
+            }?.let { skbView.layoutParams = it }
+            // 工具栏通栏铺满，菜单图标自然靠右
+            (mSkbCandidatesBarView.layoutParams as? RelativeLayout.LayoutParams)?.let {
+                it.width = env.inputAreaWidth
+                mSkbCandidatesBarView.layoutParams = it
+            }
             post {
-                val kb = mSkbRoot.findViewById<View>(R.id.skb_input_keyboard_view)
                 LogUtil.d("BoardPanels", "post-layout container=${mInputKeyboardContainer.width} " +
-                        "skbView=(${kb.x},${kb.width}) left=(${rail.x},${rail.width}) right=(${column.x},${column.width})")
+                        "skbView=(${skbView.x},${skbView.width}) left=(${rail.x},${rail.width}) right=(${column.x},${column.width})")
             }
         } else {
             mLeftPanel?.let { mInputKeyboardContainer.removeView(it) }
             mRightPanel?.let { mInputKeyboardContainer.removeView(it) }
             mLeftPanel = null
             mRightPanel = null
+            (skbView.layoutParams as? RelativeLayout.LayoutParams)?.apply {
+                addRule(CENTER_HORIZONTAL, 0)
+                addRule(END_OF, 0)
+            }?.let { skbView.layoutParams = it }
+            (mSkbCandidatesBarView.layoutParams as? RelativeLayout.LayoutParams)?.let {
+                it.width = LayoutParams.WRAP_CONTENT
+                mSkbCandidatesBarView.layoutParams = it
+            }
         }
     }
 
@@ -590,13 +607,19 @@ class InputView(context: Context, private val service: ImeService) : LifecycleRe
         if (InputModeSwitcher.isEnglish) setComposingText(DecodingInfo.composingStrForCommit)
     }
 
+    private var mLastPanelLayout = -1
     fun updateCandidateBar() {
         mSkbCandidatesBarView.scheduleShowCandidates()
         // 班牌侧栏只在输入键盘上显示；设置/符号/剪贴板等全宽容器会被遮挡
         val inputKeyboard = KeyboardManager.instance.isInputKeyboard
         mLeftPanel?.visibility = if (inputKeyboard) VISIBLE else GONE
         mRightPanel?.visibility = if (inputKeyboard) VISIBLE else GONE
-        mLeftPanel?.runCatching { refresh() }
+        // 高亮刷新依赖 Rime 原生调用，仅在布局切换时执行，不在每次按键时做
+        val layout = InputModeSwitcher.skbLayout
+        if (inputKeyboard && layout != mLastPanelLayout) {
+            mLastPanelLayout = layout
+            mLeftPanel?.runCatching { refresh() }
+        }
     }
 
     private fun resetCandidateWindow() {

@@ -2,6 +2,7 @@ package com.yuyan.imemodule.database
 
 import androidx.room.Database
 import androidx.room.Room
+import android.content.Context
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -91,31 +92,33 @@ abstract class DataBaseKT : RoomDatabase() {
                 )
                 instance.phraseDao().insertAll(phrases)
             }
-            if(instance.skbFunDao().getAllMenu().isEmpty()) {
-                val skbFuns = listOf(
-                    SkbFun(name = SkbMenuMode.ClipBoard.name, isKeep = 1),
-                    SkbFun(name = SkbMenuMode.Emojicon.name, isKeep = 1),
-                    SkbFun(name = SkbMenuMode.TextEdit.name, isKeep = 1),
-                    SkbFun(name = SkbMenuMode.Bar.name, isKeep = 1),
-                    SkbFun(name = SkbMenuMode.Home.name, isKeep = 1),
-                    SkbFun(name = SkbMenuMode.Emojicon.name, isKeep = 0, position = 0),
-                    SkbFun(name = SkbMenuMode.SwitchKeyboard.name, isKeep = 0, position = 1),
-                    SkbFun(name = SkbMenuMode.KeyboardHeight.name, isKeep = 0, position = 2),
-                    SkbFun(name = SkbMenuMode.ClipBoard.name, isKeep = 0, position = 3),
-                    SkbFun(name = SkbMenuMode.Phrases.name, isKeep = 0, position = 4),
-                    SkbFun(name = SkbMenuMode.DarkTheme.name, isKeep = 0, position = 5),
-                    SkbFun(name = SkbMenuMode.Feedback.name, isKeep = 0, position = 6),
-                    SkbFun(name = SkbMenuMode.OneHanded.name, isKeep = 0, position = 7),
-                    SkbFun(name = SkbMenuMode.NumberRow.name, isKeep = 0, position = 8),
-                    SkbFun(name = SkbMenuMode.JianFan.name, isKeep = 0, position = 9),
-                    SkbFun(name = SkbMenuMode.Mnemonic.name, isKeep = 0, position = 10),
-                    SkbFun(name = SkbMenuMode.FloatKeyboard.name, isKeep = 0, position = 11),
-                    SkbFun(name = SkbMenuMode.FlowerTypeface.name, isKeep = 0, position = 12),
-                    SkbFun(name = SkbMenuMode.Custom.name, isKeep = 0, position = 13),
-                    SkbFun(name = SkbMenuMode.Settings.name, isKeep = 0, position = 14),
-                    SkbFun(name = SkbMenuMode.TextEdit.name, isKeep = 0, position = 15),
-                )
-                instance.skbFunDao().insertAll(skbFuns)
+            // 班牌版工具栏精简：常驻栏只留 表情/Bar/HOME，其余移入可配置菜单（设置里仍可全部找回）。
+            // 种子带版本号：升级时重灌，避免覆盖安装后旧工具栏配置残留
+            val skbFunSeed = listOf(
+                SkbFun(name = SkbMenuMode.Emojicon.name, isKeep = 1),
+                SkbFun(name = SkbMenuMode.Bar.name, isKeep = 1),
+                SkbFun(name = SkbMenuMode.Home.name, isKeep = 1),
+                SkbFun(name = SkbMenuMode.SwitchKeyboard.name, isKeep = 0, position = 0),
+                SkbFun(name = SkbMenuMode.KeyboardHeight.name, isKeep = 0, position = 1),
+                SkbFun(name = SkbMenuMode.ClipBoard.name, isKeep = 0, position = 2),
+                SkbFun(name = SkbMenuMode.Phrases.name, isKeep = 0, position = 3),
+                SkbFun(name = SkbMenuMode.DarkTheme.name, isKeep = 0, position = 4),
+                SkbFun(name = SkbMenuMode.NumberRow.name, isKeep = 0, position = 5),
+                SkbFun(name = SkbMenuMode.JianFan.name, isKeep = 0, position = 6),
+                SkbFun(name = SkbMenuMode.Mnemonic.name, isKeep = 0, position = 7),
+                SkbFun(name = SkbMenuMode.FloatKeyboard.name, isKeep = 0, position = 8),
+                SkbFun(name = SkbMenuMode.FlowerTypeface.name, isKeep = 0, position = 9),
+                SkbFun(name = SkbMenuMode.Custom.name, isKeep = 0, position = 10),
+                SkbFun(name = SkbMenuMode.Settings.name, isKeep = 0, position = 11),
+                SkbFun(name = SkbMenuMode.TextEdit.name, isKeep = 0, position = 12),
+            )
+            val seedPrefs = Launcher.instance.context.getSharedPreferences("board_seed", Context.MODE_PRIVATE)
+            if (seedPrefs.getInt("skbfun_seed_version", 0) < 2) {
+                instance.skbFunDao().deleteAll()
+                instance.skbFunDao().insertAll(skbFunSeed)
+                seedPrefs.edit().putInt("skbfun_seed_version", 2).apply()
+            } else if (instance.skbFunDao().getAllMenu().isEmpty()) {
+                instance.skbFunDao().insertAll(skbFunSeed)
             }
         }
     }

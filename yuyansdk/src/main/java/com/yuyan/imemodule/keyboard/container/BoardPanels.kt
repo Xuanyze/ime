@@ -17,7 +17,6 @@ import com.yuyan.imemodule.data.theme.ThemeManager
 import com.yuyan.imemodule.keyboard.InputView
 import com.yuyan.imemodule.manager.InputModeSwitcher
 import com.yuyan.imemodule.prefs.AppPrefs
-import com.yuyan.imemodule.prefs.behavior.SkbMenuMode
 import com.yuyan.imemodule.singleton.EnvironmentSingleton
 import com.yuyan.imemodule.utils.DevicesUtils
 import com.yuyan.inputmethod.core.Kernel
@@ -25,8 +24,8 @@ import splitties.dimensions.dp
 
 /**
  * 班牌横屏三栏布局的左栏：输入方案选择 + 数字小键盘。
- * 左列固定四键：26键全拼 / 双拼 / 9键拼音 / 表情（高度约等于主键盘一行），
- * 右列为数字小键盘（7-9/4-6/1-3/·0退格）。
+ * 左列四键：26键全拼 / 双拼 / 9键拼音 / 手写（约一行键盘高的方形键），
+ * 右列数字小键盘（7-9/4-6/1-3/·0退格），列宽 1:3，键位近似方形。
  * 方案切换复用 InputModeSwitcher.switchModeForSetting（与设置页"选择输入方案"同一条链路）。
  */
 @SuppressLint("ViewConstructor")
@@ -48,6 +47,9 @@ class BoardLeftPanel(context: Context, private val inputView: InputView) : Linea
         SchemeOption(context.getString(R.string.board_scheme_t9),
             { Pair(InputModeSwitcher.MASK_SKB_LAYOUT_T9_PINYIN, CustomConstant.SCHEMA_ZH_T9) },
             { InputModeSwitcher.skbLayout == InputModeSwitcher.MASK_SKB_LAYOUT_T9_PINYIN }),
+        SchemeOption(context.getString(R.string.board_scheme_hand),
+            { Pair(InputModeSwitcher.MASK_SKB_LAYOUT_HANDWRITING, CustomConstant.SCHEMA_ZH_HANDWRITING) },
+            { InputModeSwitcher.skbLayout == InputModeSwitcher.MASK_SKB_LAYOUT_HANDWRITING }),
     )
 
     private val titleViews: List<TextView>
@@ -60,7 +62,7 @@ class BoardLeftPanel(context: Context, private val inputView: InputView) : Linea
 
         val schemeButtons = options.map { option ->
             boardPanelButton(option.title, schemeSize) { switchTo(option) }
-        } + boardPanelButton("表情", schemeSize) { inputView.onSettingsMenuClick(SkbMenuMode.Emojicon) }
+        }
         titleViews = schemeButtons
 
         val schemesCol = LinearLayout(context).apply { orientation = VERTICAL }
@@ -82,7 +84,7 @@ class BoardLeftPanel(context: Context, private val inputView: InputView) : Linea
         numberPad.addView(numberRow(boardPanelButton("·", numSize) { inputView.panelCommitText(".") }, boardPanelButton("0", numSize) { inputView.panelCommitText("0") }, boardPanelButton("⌫", numSize) { inputView.panelBackspace() }))
 
         addView(schemesCol, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f))
-        addView(numberPad, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1.8f))
+        addView(numberPad, LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 3f))
         refresh()
     }
 
@@ -92,7 +94,7 @@ class BoardLeftPanel(context: Context, private val inputView: InputView) : Linea
         refresh()
     }
 
-    /** 当前方案高亮（每次键盘切换后由 InputView.updateCandidateBar 调用） */
+    /** 当前方案高亮（仅在键盘布局变化时由 InputView 调用，避免每次按键都做原生调用） */
     fun refresh() {
         val theme = ThemeManager.activeTheme
         titleViews.forEachIndexed { index, view ->
@@ -105,8 +107,9 @@ class BoardLeftPanel(context: Context, private val inputView: InputView) : Linea
 }
 
 /**
- * 班牌横屏三栏布局的右栏：编辑功能。
- * 方向键/Home/End/退格/Delete + 全选/复制/剪切/粘贴，全部复用现有编辑键链路，无假功能。
+ * 班牌横屏三栏布局的右栏：编辑功能，2 列 × 6 行方形键。
+ * 方向/Home/End/Delete + 全选/复制/剪切/粘贴；退格用主键盘的（不重复放）。
+ * 全部复用现有编辑键链路，无假功能。
  */
 @SuppressLint("ViewConstructor")
 class BoardRightPanel(context: Context, private val inputView: InputView) : LinearLayout(context) {
@@ -125,15 +128,14 @@ class BoardRightPanel(context: Context, private val inputView: InputView) : Line
         addView(row(boardPanelButton("↑", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_UP) }, boardPanelButton("↓", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_DOWN) }))
         addView(row(boardPanelButton("←", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_LEFT) }, boardPanelButton("→", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_DPAD_RIGHT) }))
         addView(row(boardPanelButton("Home", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_MOVE_START) }, boardPanelButton("End", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_MOVE_END) }))
-        addView(row(boardPanelButton("⌫", textSize) { inputView.panelBackspace() }, boardPanelButton("Del", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_FORWARD_DEL) }))
         addView(row(boardPanelButton("全选", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_SELECT_ALL) }, boardPanelButton("复制", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_COPY) }))
         addView(row(boardPanelButton("剪切", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_CUT) }, boardPanelButton("粘贴", textSize) { inputView.panelUserDefKey(InputModeSwitcher.USER_KEYCODE_PASTE) }))
+        addView(row(boardPanelButton("Del", textSize) { inputView.panelSendKeyEvent(KeyEvent.KEYCODE_FORWARD_DEL) }))
     }
 }
 
 /**
- * 班牌侧栏按键：白底圆角 + 细边框（参考百度皮肤"程序员娱乐"的简洁风格，
- * 不照搬图片素材，颜色仍取自当前主题以适配深色模式）。
+ * 班牌侧栏按键：素色圆角（无边框），颜色取自当前主题适配深色模式。
  * 长标签自动缩小字号且不折行。
  */
 private fun View.boardPanelButton(label: String, textSizePx: Int, onClick: () -> Unit): TextView {
@@ -147,13 +149,10 @@ private fun View.boardPanelButton(label: String, textSizePx: Int, onClick: () ->
         else -> (textSizePx * 0.58f).toInt()
     }
     view.setTextSize(TypedValue.COMPLEX_UNIT_PX, fittedSize.toFloat())
-    val theme = ThemeManager.activeTheme
-    view.setTextColor(theme.keyTextColor)
+    view.setTextColor(ThemeManager.activeTheme.keyTextColor)
     view.background = GradientDrawable().apply {
         cornerRadius = dp(12).toFloat()
-        setColor(theme.keyBackgroundColor)
-        // 细边框：取按键文字颜色的 RGB，固定 13% 透明度
-        setStroke(dp(1), 0x22000000 or (theme.keyTextColor and 0x00FFFFFF))
+        setColor(ThemeManager.activeTheme.keyBackgroundColor)
     }
     view.setPadding(dp(2), dp(2), dp(2), dp(2))
     view.isClickable = true
