@@ -2,7 +2,7 @@ package com.yuyan.imemodule.utils
 
 import android.content.Context
 import com.yuyan.imemodule.application.CustomConstant
-import com.yuyan.imemodule.inputmethod.RimeEngine
+import com.yuyan.inputmethod.RimeEngine
 import com.yuyan.imemodule.prefs.AppPrefs
 import com.yuyan.inputmethod.core.Kernel
 import com.yuyan.inputmethod.core.Rime
