@@ -103,3 +103,22 @@
 - 风险：私有 fork 的部署器对标准方案的兼容性未验证；候选渲染依赖 RimeContext 字段，script_translator 类方案应兼容；失败回退=保留旧编译产物文件不冲突（新方案源文件名不与旧 .prism.bin/.table.bin 同名即安全，部署成功会生成同名产物覆盖…注意：id 改成 pinyin 部署后会覆盖旧 pinyin.table.bin——**回退手段=删除 assets 中新源后重装**）
 
 **实施顺序**：① rime_ice 全拼先行（剥 lua+改名+default.yaml+裁词库+bump 版本）验证部署出候选；② 9键/双拼/英文跟进；③ 模糊音设置 UI；④ 联想（引擎自带，万象 lua 联想确认无法用）
+
+
+## 八、当前挂起事项（2026-08-30 更新，新对话从这里继续）
+
+1. **模糊音正在调试（最高优先）**：设置 → 输入设置有 9 组模糊音开关（zh/z、ch/c、sh/s、n/l、l/r、f/h、an/ang、en/eng、in/ing）。
+   - 机制：开关 → `FuzzyPinyin.apply()`（yuyansdk/.../utils/FuzzyPinyin.kt）写 `<RIME_DICT_PATH>/pinyin.custom.yaml` 及六套双拼 custom → 触发 Rime 完整重部署（fullCheck=true）。
+   - 已修：resetIme() 不带 fullCheck 不编译 patch → 改为 RimeEngine.destroy() + Rime.getInstance(fullCheck=true) + initImeSchema。
+   - **进行中的二分测试**：已用 adb 手动向设备写入 pinyin.custom.yaml（n/l 规则：derive/^n(.)/l$1/ 等）并 force-stop 应用，**等用户打 niu/liu 验证部署链路**。
+     - 若生效 → 问题在应用内开关链路（监听未触发/写入路径不对），查 FuzzyPinyin.apply 是否被调用。
+     - 若不生效 → patch 格式（speller/algebra/@next 语法）或 libyuyanime 部署器对 custom yaml 的处理有问题，抓 adb logcat 看 Rime 部署日志。
+   - adb 直查：`adb shell "cat /storage/emulated/0/Android/data/com.yuyan.pinyin.offline.release/files/rime/pinyin.custom.yaml"`
+   - 双拼韵尾模糊（an/ang 在双拼生效）未做——各方案韵母键位不同，需按键位表逐方案定制。
+2. **手写全屏输入**：用户提过（整个界面可写），中等偏大改动（全局手势层+手势冲突），暂缓。
+3. **存储占用**：用户反馈偏大。构成：APK 60MB + 数据目录（词库源 17MB + 编译产物 + 旧 stroke/lx17 编译词库）约 150-200MB，在 250MB 预算内。如需减重可裁雾凇 ext 词库。
+4. **宣传页**：docs/index.html（v3 深色工具风，内嵌 CSS 键盘演示）。docs/assets/ 有两张干净真机截图（board_full.jpg、board_handwriting.jpg）未引用，可加回"实机"小节。待办：部署到 EdgeOne Pages（大陆可访问）——导入 Git 仓库/输出目录 docs/无构建命令，等用户操作结果。
+5. **工具链**：gh CLI 已装并登录（Xuanyze）。Git Bash 里需 `export GH_CONFIG_DIR="C:/Users/16891/AppData/Roaming/GitHub CLI"`；需代理 `export HTTPS_PROXY=http://127.0.0.1:7897`（用户说 1897 不对，实际监听 7897）。GitHub 匿名 API 60 次/小时易耗尽，用 gh 5000/h。
+6. **已完成并真机验证**：雾凇全拼/双拼六套/9键/英文部署与候选；Bar/HOME、三栏布局、方形侧栏、chevron 方向键、工具栏精简贴右、高度拖动节流、签名 release（用户称"顺手很多"）。
+7. **CI**：build-apk.yml（assembleOfflineDebug+Release，失败日志发 commit comment）；docs/** 与 *.md 跳过构建；artifact 保留 14/7 天；旧 run/artifact 已清理。签名 keystore 已入仓库（公开）。
+8. **环境**：adb 可用（设备=用户平板）；Python 3.13 可用；本地无 Android SDK/gradle，编译全靠 CI。
