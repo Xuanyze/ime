@@ -4,6 +4,7 @@ import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import com.yuyan.imemodule.application.CustomConstant
 import com.yuyan.imemodule.prefs.AppPrefs.Companion.getInstance
+import com.yuyan.imemodule.utils.FuzzyPinyin
 import com.yuyan.imemodule.keyboard.KeyboardManager
 import com.yuyan.imemodule.keyboard.container.InputBaseContainer
 import com.yuyan.imemodule.utils.KeyboardLoaderUtil
@@ -334,7 +335,7 @@ object InputModeSwitcher {
         if (isEnglish) {
             Kernel.initImeSchema(CustomConstant.SCHEMA_EN)
         } else {
-            Kernel.initImeSchema(getInstance().internal.pinyinModeRime.getValue())
+            Kernel.initImeSchema(FuzzyPinyin.resolveSchemaId(getInstance().internal.pinyinModeRime.getValue()))
         }
         if (isChinese || isEnglish) {
             mRecentLauageInputMode = mInputMode

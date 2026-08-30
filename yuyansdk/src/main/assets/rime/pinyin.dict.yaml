@@ -1,0 +1,11 @@
+# Rime dictionary
+# encoding: utf-8
+
+---
+name: pinyin
+version: "2026-01-26"
+import_tables:
+  - cn_dicts/8105
+  - cn_dicts/base
+  - cn_dicts/others
+...

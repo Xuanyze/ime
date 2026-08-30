@@ -4,8 +4,8 @@
 
 # 方案说明
 schema:
-  schema_id: pinyin
-  name: 雾凇拼音
+  schema_id: pinyin_fuzzy
+  name: 雾凇拼音模糊音
   version: "2026-03-08"
   author:
     - Dvel
@@ -148,7 +148,8 @@ pin_cand_filter:
 
 # 主翻译器，拼音
 translator:
-  dictionary: pinyin         # 挂载词库 pinyin.dict.yaml
+  dictionary: pinyin            # 共用 pinyin 词库表
+  prism: pinyin_fuzzy
   enable_word_completion: true # 大于 4 音节的词条自动补全，librime > 1.11.2
   # max_sentences: 1           # 造句数量，偏好长句输入可设置大于 1，librime ≥ 1.17.0
   spelling_hints: 8            # corrector.lua ：为了让错音错字提示的 Lua 同时适配全拼双拼，将拼音显示在 comment 中
@@ -274,6 +275,24 @@ speller:
   initials: zyxwvutsrqponmlkjihgfedcbaZYXWVUTSRQPONMLKJIHGFEDCBA
   delimiter: " '"  # 第一位<空格>是拼音之间的分隔符；第二位<'>表示可以手动输入单引号来分割拼音。
   algebra:
+    - derive/^zh/z/
+    - derive/^z([aeiou])/zh$1/
+    - derive/^ch/c/
+    - derive/^c([aeiou])/ch$1/
+    - derive/^sh/s/
+    - derive/^s([aeiou])/sh$1/
+    - derive/^n(.)/l$1/
+    - derive/^l(.)/n$1/
+    - derive/^l([aeiou])/r$1/
+    - derive/^r([aeiou])/l$1/
+    - derive/^f([aeiou])/h$1/
+    - derive/^h([aeiou])/f$1/
+    - derive/ang$/an/
+    - derive/an$/ang/
+    - derive/eng$/en/
+    - derive/en$/eng/
+    - derive/ing$/in/
+    - derive/in$/ing/
     ### 模糊音
     # 声母
     # - derive/^([zcs])h/$1/          # zh* ch* sh* 派生出 z* c* s*

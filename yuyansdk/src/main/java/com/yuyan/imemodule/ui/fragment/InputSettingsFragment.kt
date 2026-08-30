@@ -2,7 +2,6 @@ package com.yuyan.imemodule.ui.fragment
 
 import com.yuyan.imemodule.application.CustomConstant
 import com.yuyan.imemodule.manager.InputModeSwitcher
-import com.yuyan.imemodule.application.Launcher
 import com.yuyan.imemodule.prefs.AppPrefs
 import com.yuyan.imemodule.prefs.behavior.DoublePinyinSchemaMode
 import com.yuyan.imemodule.ui.fragment.base.ManagedPreferenceFragment
@@ -22,7 +21,7 @@ class InputSettingsFragment: ManagedPreferenceFragment(AppPrefs.getInstance().in
         AppPrefs.getInstance().input.fuzzyAnAng, AppPrefs.getInstance().input.fuzzyEnEng,
         AppPrefs.getInstance().input.fuzzyInIng)
     private val fuzzyListener = ManagedPreference.OnChangeListener<Boolean> { _, _ ->
-        FuzzyPinyin.apply(Launcher.instance.context)
+        FuzzyPinyin.onTogglesChanged()
     }
 
     private val switchKeyListener = ManagedPreference.OnChangeListener<Boolean> { _, _ ->
