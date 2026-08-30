@@ -15,11 +15,18 @@ class Rime(fullCheck: Boolean) {
         private var instance: Rime? = null
         private var mContext: RimeContext? = null
         private var mStatus: RimeStatus? = null
+        private val rimeLock = Any()
+
+        /** 重部署进行中（native 会话销毁重建，此期间所有引擎调用安全降级） */
+        @Volatile
+        var deploying: Boolean = false
 
         @JvmStatic
         fun getInstance(fullCheck: Boolean = false): Rime {
-            if (instance == null) instance = Rime(fullCheck)
-            return instance!!
+            synchronized(rimeLock) {
+                if (instance == null) instance = Rime(fullCheck)
+                return instance!!
+            }
         }
 
         init {
@@ -27,23 +34,41 @@ class Rime(fullCheck: Boolean) {
         }
 
         fun startup(context: Context, fullCheck: Boolean) {
-            startupRime(context, CustomConstant.RIME_DICT_PATH, CustomConstant.RIME_DICT_PATH, fullCheck)
-            updateStatus()
+            synchronized(rimeLock) {
+                startupRime(context, CustomConstant.RIME_DICT_PATH, CustomConstant.RIME_DICT_PATH, fullCheck)
+                updateStatus()
+            }
         }
 
         @JvmStatic
         fun destroy() {
-            exitRime()
-            instance = null
+            synchronized(rimeLock) {
+                exitRime()
+                instance = null
+            }
+        }
+
+        /**
+         * 销毁并以指定 fullCheck 重建，两步在同一锁内完成。
+         * 若分开调用 destroy+getInstance，中间其他线程可能抢先以 fullCheck=false 建实例，
+         * 导致全量部署被跳过。
+         */
+        fun recreate(fullCheck: Boolean) {
+            synchronized(rimeLock) {
+                exitRime()
+                instance = Rime(fullCheck)
+            }
         }
 
         fun updateStatus() {
+            if (deploying) return
             measureTimeMillis {
                 mStatus = getRimeStatus() ?: RimeStatus()
             }
         }
 
         fun updateContext() {
+            if (deploying) return
             measureTimeMillis {
                 mContext = getRimeContext() ?: RimeContext()
             }
@@ -73,7 +98,7 @@ class Rime(fullCheck: Boolean) {
 
         @JvmStatic
         fun processKey(keycode: Int, mask: Int): Boolean {
-            if (keycode <= 0 || keycode == 0xffffff) return false
+            if (keycode <= 0 || keycode == 0xffffff || deploying) return false
             setRimePageSize(100)
             return processRimeKey(keycode, mask).also {
                 updateContext()
@@ -82,18 +107,22 @@ class Rime(fullCheck: Boolean) {
 
         @JvmStatic
         fun replaceKey(caretPos: Int, length: Int, key: String): Boolean {
+            if (deploying) return false
             return replaceRimeKey(caretPos, length, key).also {
                 updateContext()
             }
         }
 
         @JvmStatic
-        fun clearComposition() { clearRimeComposition()
+        fun clearComposition() {
+            if (deploying) return
+            clearRimeComposition()
             updateContext()
         }
 
         @JvmStatic
         fun selectCandidate(index: Int): Boolean {
+            if (deploying) return false
             return selectRimeCandidate(index).also {
                 updateContext()
             }
@@ -101,21 +130,25 @@ class Rime(fullCheck: Boolean) {
 
         @JvmStatic
         fun setOption(option: String, value: Boolean) {
+            if (deploying) return
             setRimeOption(option, value)
         }
 
         @JvmStatic
         fun selectSchema(schemaId: String): Boolean {
+            if (deploying) return false
             return selectRimeSchema(schemaId).also {
                 updateContext()
             }
         }
 
         fun getAssociateList(key: String?): Array<String?> {
+            if (deploying) return emptyArray()
             return getRimeAssociateList(key)
         }
 
         fun chooseAssociate(index: Int): Boolean {
+            if (deploying) return false
             return selectRimeAssociate(index)
         }
 
