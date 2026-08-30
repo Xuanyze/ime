@@ -107,19 +107,19 @@
 
 ## 八、当前挂起事项（2026-08-30 更新，新对话从这里继续）
 
-1. **模糊音根因已定位并修复（2026-08-30 上午，commit efd7628，待装包真机验证）**：设置 → 输入设置有 9 组模糊音开关（zh/z、ch/c、sh/s、n/l、l/r、f/h、an/ang、en/eng、in/ing）。
-   - **此前"不生效"的 5 处根因（全部修复）**：
-     ① patch 键 `speller/algebra/@next` 赋 YAML 列表 → librime `config_data.cc` 对 @next 走 `*target=value`，整个列表嵌成单个元素（垃圾）→ 正确写法是 `speller/algebra/0+`（`EditNode→AppendToList` 逐项头插；已克隆 librime 源码到 /tmp/librime-src 验证）。
-     ② `yamlPatch` 把 `$` 运行时替换成 `\$` → YAML 裸标量不处理反斜杠，Rime 收到字面 `\$1` → 已去掉转义。
-     ③ **`apply()` 读开关状态用自建 `fuzzy_prefs` SharedPreferences，而开关实际存 AppPrefs → 永远读到全关、规则恒空、甚至删掉 custom.yaml**（设备上无任何 double_pinyin_*.custom.yaml 的原因）→ 改读 AppPrefs。
-     ④ zh_z/ch_c/sh_s 三组没接规则（apply 只用 initialRules/finalRules 两张表，漏了这三组）→ 已补。
-     ⑤ 全量部署（68MB 词库编译，分钟级）在 UI 线程同步跑 → ANR → 已移到子线程防抖（600ms）执行，`Rime.deploying` 标志让输入链路安全降级（丢弃按键不崩溃），Rime 单例加锁 + 新增 `recreate(fullCheck)` 原子销毁重建（避免两步之间被 IME 抢先建 fullCheck=false 实例跳过部署）。
-   - **为什么用头部插入 `0+` 而非尾部**：双拼方案 algebra 里 zh/ch/sh→ⓊⒾⓋ、韵母→单符号的 xform 变换在后段；头部插入让派生的原始拼写经过同样变换，才能命中双拼键位。
-   - **部署器兼容性已静态确认**：librime config compiler（private .so 也带）对 custom.yaml 走 `auto_patch → PatchReference → PatchLiteral → EditNode`，`/0+` 操作符支持。
-   - **验证步骤（装 efd7628 之后的包）**：① 设置→输入设置拨任意模糊音开关（如 n/l）；② 等 Toast「模糊音部署完成」（首次 1~3 分钟）；③ `adb shell "cat /storage/emulated/0/Android/data/com.yuyan.pinyin.offline.release/files/rime/pinyin.custom.yaml"` 应含 `speller/algebra/0+:` 与 6 份双拼 custom；④ 26键打 `niu` 应出「刘/流」，打 `liu` 应出「牛」；⑤ 日志 `adb logcat -s FuzzyPinyin` 看 deploy start/done 耗时。
-   - 双拼韵尾模糊（an/ang 在双拼生效）未做——各方案韵母键位不同，需按键位表逐方案定制。
-   - 9键（t9_pinyin）不写 custom（数字键位，字母 derive 无意义），v1 范围如此。
-   - 注意：用户设备 9 个开关当前全为 ON（AppPrefs 状态），装新包后拨任意开关即可触发首次部署。
+1. **模糊音已实现（2026-08-30 中午，commit fad9e64，真机验证中）**：设置 → 输入设置 9 组模糊音开关。
+   - **终版机制：双方案热切换，零部署**。`pinyin_fuzzy` 方案（雾凇全拼 + 9 组模糊音 derive）已用 librime 1.11.2（Windows 官方 release 的 rime_deployer.exe，msvc 版，需把 dist/lib 加 PATH）**预编译**进 assets/rime/build/pinyin_fuzzy.prism.bin；开关任意一个打开 → `FuzzyPinyin.resolveSchemaId` 把 pinyin 解析为 pinyin_fuzzy → `Kernel.initImeSchema` 瞬时切换（InputModeSwitcher.saveInputMode 统一解析 + InputSettingsFragment 监听热切换）。全关 → 切回 pinyin。
+   - **为什么弃用设备端部署（三轮真机实验结论，勿再走回头路）**：
+     ① 私有 libyuyanime.so 把所有方案 YAML **内嵌**在 so 里，部署器/运行时一律优先内嵌（磁盘 pinyin.schema.yaml 被无视）；
+     ② 内嵌方案 **speller 无 algebra**、dictionary 名为 `pinyin`（磁盘上是 rime_ice）→ 设备端重建会产出空词库表（10:18 事故：68MB 表被重建成 3.5MB）；
+     ③ prism 构建器**不读 patch 后的配置**，custom.yaml 的 derive 永远进不了 prism；
+     ④ 部署维护必须存在 default.yaml（librime WorkspaceUpdate 第一步 stat 它）否则直接崩，但内嵌 default 又会覆盖用户写的 schema_list；
+     ⑤ librime 1.11.2 **不支持** `speller/algebra/0+` 索引追加（master 才有），`/+=` 才是 1.11.2 的追加语法；YAML 裸标量里 `$1` 不能写成 `\$1`。
+     另：实验期间引擎用中间态表打开过 pinyin.userdb 导致"有 preedit 无候选"，移除 userdb 即恢复——**换表实验后务必清 userdb**。
+   - **词库已收敛**：pinyin.table.bin 重建为 assets 自带 3 部词库（8105/base/others，68.5MB→17.7MB，APK 同步瘦身），并随包附带 pinyin.dict.yaml 源 → 设备端任何意外重建都可复现一致音节表。pinyin.dict.yaml imports 已裁净（曾引用不存在的 ext/tencent 导致部署失败）。
+   - **顺带修复**：assets pinyin.schema.yaml 的 `table_translator@cn_en` 行多 4 格缩进（YAML 非法，63 行）+ 主词库名 rime_ice→pinyin。
+   - **粒度限制**：9 组开关 = 一个总开关（方案级），不支持逐组生效；双拼模糊未做（磁盘双拼 schema 的 prism 名都是 `double_pinyin` 互相冲突，且内嵌方案无 algebra，需先修命名才能本地预编译）。
+   - **验证步骤**：装 fad9e64 之后的包 → 拨任意模糊音开关（应瞬时切换，无部署等待）→ 26键打 `niu` 出「刘/流」、`liu` 出「牛」、`zi` 出「之/只」→ 回归 9键（64 出候选）与双拼 → 若 t9/双拼出现乱序候选说明新表音节 ID 与旧预编译 prism 错位，需要把 t9/双拼也本地预编译（t9 磁盘方案缺 `dictionary: pinyin`（已加）、prism 名需 t9_pinyin；双拼 prism 名需改为各自 schema_id，并需 rime-ice 仓库的 rime_ice.schema.yaml + symbols/ 资源解决 __include 链）。
 2. **手写全屏输入**：用户提过（整个界面可写），中等偏大改动（全局手势层+手势冲突），暂缓。
 3. **存储占用**：用户反馈偏大。构成：APK 60MB + 数据目录（词库源 17MB + 编译产物 + 旧 stroke/lx17 编译词库）约 150-200MB，在 250MB 预算内。如需减重可裁雾凇 ext 词库。
 4. **宣传页**：docs/index.html（v3 深色工具风，内嵌 CSS 键盘演示）。docs/assets/ 有两张干净真机截图（board_full.jpg、board_handwriting.jpg）未引用，可加回"实机"小节。待办：部署到 EdgeOne Pages（大陆可访问）——导入 Git 仓库/输出目录 docs/无构建命令，等用户操作结果。
