@@ -15,7 +15,9 @@ android {
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
         ndk {
-            abiFilters 'arm64-v8a'
+            // 班牌是 32 位 ARM：只打 arm64-v8a 会装不上（INSTALL_FAILED_NO_MATCHING_ABIS，安装器显示"不兼容"）。
+            // 保留 arm64-v8a 以兼容平板真机验证。
+            abiFilters 'arm64-v8a', 'armeabi-v7a'
         }
 
         javaCompileOptions {

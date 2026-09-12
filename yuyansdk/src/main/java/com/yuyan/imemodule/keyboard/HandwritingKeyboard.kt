@@ -232,6 +232,7 @@ class HandwritingKeyboard(context: Context?) : TextKeyboard(context) {
     }
 
     private fun recognitionData() {
+        if (!HWEngine.isAvailable) return // 32 位设备无手写 native 库，静默忽略笔迹而非崩溃
         HWEngine.recognitionData(mSBPoint) {
                 item -> mService?.postDelayed({ mService!!.responseHandwritingResultEvent(item) }, 20)
         }

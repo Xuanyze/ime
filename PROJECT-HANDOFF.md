@@ -127,3 +127,28 @@
 6. **已完成并真机验证**：雾凇全拼/双拼六套/9键/英文部署与候选；Bar/HOME、三栏布局、方形侧栏、chevron 方向键、工具栏精简贴右、高度拖动节流、签名 release（用户称"顺手很多"）。
 7. **CI**：build-apk.yml（assembleOfflineDebug+Release，失败日志发 commit comment）；docs/** 与 *.md 跳过构建；artifact 保留 14/7 天；旧 run/artifact 已清理。签名 keystore 已入仓库（公开）。
 8. **环境**：adb 可用（设备=用户平板）；Python 3.13 可用；本地无 Android SDK/gradle，编译全靠 CI。
+
+## 九、班牌装不上"不兼容"：ABI 修复（2026-08-30）
+
+**现象**：APK 在班牌（Android 7.1.2）上被系统安装器直接拒绝，提示"不兼容"。
+
+**根因**：班牌是 **32 位 ARM（armeabi-v7a）**，而 `app/build.gradle` 的 `abiFilters 'arm64-v8a'` 会把最终 APK 里的 native 库全部过滤成 64 位。32 位设备上找不到匹配 ABI → `INSTALL_FAILED_NO_MATCHING_ABIS`，中文安装器显示成"不兼容"。注意 `yuyansdk/libs/armeabi-v7a/libyuyanime.so` 本来存在，是被 app 模块的 abiFilters 挡在包外的。
+
+**改动**：
+1. `app/build.gradle`：`abiFilters 'arm64-v8a', 'armeabi-v7a'`（保留 arm64 供平板真机验证；APK 约增大 4–5MB）。
+2. 32 位手写降级——手写相关的 4 个 .so（handwriting/gpen_handwriter/hwInterface/SogouShell）只有 arm64-v8a 版本：
+   - `HandWriting.kt`：`init{}` try-catch 加载 + 新增 `isLoaded` 标志，未加载时 `init/setProperties/selectInputMode/getCandidatesPyComposition` 安全返回。
+   - `HWEngine.kt`：新增 `isAvailable`（= `HandWriting.isLoaded`）；`init` 与 `recognitionData()` 在不可用时直接返回。
+   - `HandwritingKeyboard.kt`：识别路径先判 `HWEngine.isAvailable`，不满足则静默忽略笔迹。
+   - 结果：32 位设备上手写区可绘制但不出候选、**不崩溃**；32 位不支持手写（上游无 armv7 手写库），与"手写暂缓"一致。表情功能不依赖 SogouShell native（`libSogouShell.so` 只是 `libhandwriting→libhwInterface` 的传递依赖），不受影响。
+3. CI：`build-apk.yml` 增加 "Inspect APK ABIs and size" 步骤（`unzip -l | grep lib/`），APK 里打包了哪些 ABI 直接进构建日志——本地无 SDK、又接触不到设备时，这是主要验证手段。
+
+**验证状态**：CI 构建结果见对应 commit；用户当前不在学校、接触不到班牌，平板（arm64）回归待做。
+
+**若回学校复测仍"不兼容"**（按可能性排查）：
+1. 实际是 armeabi（ARMv5/v6）或 x86 → 追加对应 ABI（libyuyanime 有 x86/x86_64 版，手写库均缺）。
+2. 系统实际低于 API 23 → 降 minSdk 到 21/22（appcompat 1.7 / material 1.12 / Room 2.6.1 均支持 21）。
+3. 厂商安装器白名单或签名校验 → 走厂商部署通道，必要时按其要求重签 release。
+4. 存储不足（APK ~60MB + 数据 150–200MB）→ 裁 assets 词库。
+
+**安装建议**：班牌上装 release 包 `com.yuyan.pinyin.offline.release`（R8 优化，弱机更流畅），不要装 debug 包。

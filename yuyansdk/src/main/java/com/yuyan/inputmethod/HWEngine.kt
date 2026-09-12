@@ -13,10 +13,16 @@ import com.yuyan.inputmethod.core.HandWriting
 object HWEngine {
     private var mHanyuPinyinOutputFormat: HanyuPinyinOutputFormat
 
+    /** 手写能力是否可用：32 位设备无手写 native 库时为 false */
+    val isAvailable: Boolean
+        get() = HandWriting.isLoaded
+
     init {
-        HandWriting.init(Launcher.instance.context)
-        HandWriting.setProperties()
-        HandWriting.selectInputMode(5)
+        if (HandWriting.isLoaded) {
+            HandWriting.init(Launcher.instance.context)
+            HandWriting.setProperties()
+            HandWriting.selectInputMode(5)
+        }
         mHanyuPinyinOutputFormat = HanyuPinyinOutputFormat()
         mHanyuPinyinOutputFormat.caseType = HanyuPinyinCaseType.LOWERCASE
         mHanyuPinyinOutputFormat.toneType = HanyuPinyinToneType.WITH_TONE_MARK
@@ -24,6 +30,7 @@ object HWEngine {
     }
 
     fun recognitionData(strokes: MutableList<Short?>, recogResult: IHandWritingCallBack){
+        if (!isAvailable) return
         HandWriting.reset()
         val strokesData = strokes.toMutableList()
         val intArray = strokesData.filterNotNull().map { it.toInt() }.toIntArray()

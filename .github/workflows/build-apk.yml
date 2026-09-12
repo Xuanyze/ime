@@ -28,6 +28,16 @@ jobs:
           set -o pipefail
           ./gradlew assembleOfflineDebug assembleOfflineRelease --stacktrace 2>&1 | tee build.log
 
+      - name: Inspect APK ABIs and size
+        if: always()
+        run: |
+          shopt -s nullglob
+          for apk in app/build/outputs/apk/offline/*/*.apk; do
+            echo "===== $apk"
+            ls -lh "$apk"
+            unzip -l "$apk" | grep -E "lib/" || echo "  (未打包任何 native 库)"
+          done
+
       - name: Publish build log to commit comment (on failure)
         if: failure()
         env:
