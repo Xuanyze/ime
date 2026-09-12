@@ -143,7 +143,7 @@
    - 结果：32 位设备上手写区可绘制但不出候选、**不崩溃**；32 位不支持手写（上游无 armv7 手写库），与"手写暂缓"一致。表情功能不依赖 SogouShell native（`libSogouShell.so` 只是 `libhandwriting→libhwInterface` 的传递依赖），不受影响。
 3. CI：`build-apk.yml` 增加 "Inspect APK ABIs and size" 步骤（`unzip -l | grep lib/`），APK 里打包了哪些 ABI 直接进构建日志——本地无 SDK、又接触不到设备时，这是主要验证手段。
 
-**验证状态**：CI 构建结果见对应 commit；用户当前不在学校、接触不到班牌，平板（arm64）回归待做。
+**验证状态**：commit `07bc139` CI 通过（run 34667827458）。自检日志确认两个 APK 均含 `lib/armeabi-v7a/libyuyanime.so`（3.18MB）与 `lib/arm64-v8a/*`（5 个 .so）：release 45MB / debug 52MB。签名仍为 v1+v2，minSdk 23 ≤ 班牌 API 25，v2 签名 7.0+ 原生支持。用户当前不在学校、接触不到班牌，平板（arm64）回归待做。
 
 **若回学校复测仍"不兼容"**（按可能性排查）：
 1. 实际是 armeabi（ARMv5/v6）或 x86 → 追加对应 ABI（libyuyanime 有 x86/x86_64 版，手写库均缺）。
